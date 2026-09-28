@@ -73,28 +73,32 @@
          "kana": "あい",
          "r": "ai",
          "it": "amore",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "いえ",
          "kana": "いえ",
          "r": "ie",
          "it": "casa",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "うえ",
          "kana": "うえ",
          "r": "ue",
          "it": "sopra",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "あお",
          "kana": "あお",
          "r": "ao",
          "it": "blu",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "いいえ",
@@ -195,42 +199,48 @@
          "kana": "かさ",
          "r": "kasa",
          "it": "ombrello",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "すし",
          "kana": "すし",
          "r": "sushi",
          "it": "sushi",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "あき",
          "kana": "あき",
          "r": "aki",
          "it": "autunno",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "こえ",
          "kana": "こえ",
          "r": "koe",
          "it": "voce",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "しお",
          "kana": "しお",
          "r": "shio",
          "it": "sale",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "いす",
          "kana": "いす",
          "r": "isu",
          "it": "sedia",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         }
        ]
       },
@@ -325,42 +335,48 @@
          "kana": "いぬ",
          "r": "inu",
          "it": "cane",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "ねこ",
          "kana": "ねこ",
          "r": "neko",
          "it": "gatto",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "なつ",
          "kana": "なつ",
          "r": "natsu",
          "it": "estate",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "くち",
          "kana": "くち",
          "r": "kuchi",
          "it": "bocca",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "つくえ",
          "kana": "つくえ",
          "r": "tsukue",
          "it": "scrivania",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "そと",
          "kana": "そと",
          "r": "soto",
          "it": "fuori",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         }
        ]
       },
@@ -454,42 +470,48 @@
          "kana": "はな",
          "r": "hana",
          "it": "fiore",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "ひと",
          "kana": "ひと",
          "r": "hito",
          "it": "persona",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "ふね",
          "kana": "ふね",
          "r": "fune",
          "it": "nave",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "みみ",
          "kana": "みみ",
          "r": "mimi",
          "it": "orecchio",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "ほし",
          "kana": "ほし",
          "r": "hoshi",
          "it": "stella",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "むし",
          "kana": "むし",
          "r": "mushi",
          "it": "insetto",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         }
        ]
       },
@@ -592,42 +614,48 @@
          "kana": "やま",
          "r": "yama",
          "it": "montagna",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "ゆき",
          "kana": "ゆき",
          "r": "yuki",
          "it": "neve",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "よる",
          "kana": "よる",
          "r": "yoru",
          "it": "notte",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "さくら",
          "kana": "さくら",
          "r": "sakura",
          "it": "ciliegio in fiore",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "わたし",
          "kana": "わたし",
          "r": "watashi",
          "it": "io",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "ほん",
          "kana": "ほん",
          "r": "hon",
          "it": "libro",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         }
        ]
       },
@@ -812,42 +840,48 @@
          "kana": "かぎ",
          "r": "kagi",
          "it": "chiave",
-         "role": "read"
+         "role": "read",
+         "acc": 2
         },
         {
          "jp": "ごはん",
          "kana": "ごはん",
          "r": "gohan",
          "it": "riso cotto, pasto",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "ぶた",
          "kana": "ぶた",
          "r": "buta",
          "it": "maiale",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "でんわ",
          "kana": "でんわ",
          "r": "denwa",
          "it": "telefono",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "えんぴつ",
          "kana": "えんぴつ",
          "r": "enpitsu",
          "it": "matita",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "ひざ",
          "kana": "ひざ",
          "r": "hiza",
          "it": "ginocchio",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         }
        ]
       },
@@ -975,42 +1009,48 @@
          "kana": "きって",
          "r": "kitte",
          "it": "francobollo",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "おちゃ",
          "kana": "おちゃ",
          "r": "ocha",
          "it": "tè",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "しゃしん",
          "kana": "しゃしん",
          "r": "shashin",
          "it": "fotografia",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "がっこう",
          "kana": "がっこう",
          "r": "gakkō",
          "it": "scuola",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         },
         {
          "jp": "きょう",
          "kana": "きょう",
          "r": "kyō",
          "it": "oggi",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "いっしょ",
          "kana": "いっしょ",
          "r": "issho",
          "it": "insieme",
-         "role": "read"
+         "role": "read",
+         "acc": 0
         }
        ]
       }
@@ -1145,14 +1185,16 @@
          "kana": "アイス",
          "r": "aisu",
          "it": "gelato",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "ココア",
          "kana": "ココア",
          "r": "kokoa",
          "it": "cioccolata calda",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "スイス",
@@ -1166,7 +1208,8 @@
          "kana": "キウイ",
          "r": "kiui",
          "it": "kiwi",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         }
        ]
       },
@@ -1297,28 +1340,32 @@
          "kana": "テニス",
          "r": "tenisu",
          "it": "tennis",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "ネクタイ",
          "kana": "ネクタイ",
          "r": "nekutai",
          "it": "cravatta",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "ナイフ",
          "kana": "ナイフ",
          "r": "naifu",
          "it": "coltello",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "テキスト",
          "kana": "テキスト",
          "r": "tekisuto",
          "it": "libro di testo",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         }
        ]
       },
@@ -1454,35 +1501,40 @@
          "kana": "カメラ",
          "r": "kamera",
          "it": "fotocamera",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "トマト",
          "kana": "トマト",
          "r": "tomato",
          "it": "pomodoro",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "ホテル",
          "kana": "ホテル",
          "r": "hoteru",
          "it": "hotel",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "メロン",
          "kana": "メロン",
          "r": "meron",
          "it": "melone",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "ミルク",
          "kana": "ミルク",
          "r": "miruku",
          "it": "latte",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         }
        ]
       },
@@ -1667,35 +1719,40 @@
          "kana": "コーヒー",
          "r": "kōhī",
          "it": "caffè",
-         "role": "read"
+         "role": "read",
+         "acc": 3
         },
         {
          "jp": "ケーキ",
          "kana": "ケーキ",
          "r": "kēki",
          "it": "torta",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "テレビ",
          "kana": "テレビ",
          "r": "terebi",
          "it": "televisione",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "パン",
          "kana": "パン",
          "r": "pan",
          "it": "pane",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "ピザ",
          "kana": "ピザ",
          "r": "piza",
          "it": "pizza",
-         "role": "read"
+         "role": "read",
+         "acc": 1
         },
         {
          "jp": "ローマ",
@@ -1759,35 +1816,40 @@
          "kana": "わたし",
          "r": "watashi",
          "it": "io",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "がくせい",
          "kana": "がくせい",
          "r": "gakusei",
          "it": "studente",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "せんせい",
          "kana": "せんせい",
          "r": "sensei",
          "it": "insegnante",
-         "role": "lang"
+         "role": "lang",
+         "acc": 3
         },
         {
          "jp": "かいしゃいん",
          "kana": "かいしゃいん",
          "r": "kaishain",
          "it": "impiegato",
-         "role": "lang"
+         "role": "lang",
+         "acc": 3
         },
         {
          "jp": "いしゃ",
          "kana": "いしゃ",
          "r": "isha",
          "it": "medico",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "イタリアじん",
@@ -1801,21 +1863,24 @@
          "kana": "にほんじん",
          "r": "nihonjin",
          "it": "giapponese (persona)",
-         "role": "lang"
+         "role": "lang",
+         "acc": 4
         },
         {
          "jp": "ともだち",
          "kana": "ともだち",
          "r": "tomodachi",
          "it": "amico",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "はい",
          "kana": "はい",
          "r": "hai",
          "it": "sì",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "いいえ",
@@ -2083,49 +2148,56 @@
          "kana": "ほん",
          "r": "hon",
          "it": "libro",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "かばん",
          "kana": "かばん",
          "r": "kaban",
          "it": "borsa",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "とけい",
          "kana": "とけい",
          "r": "tokei",
          "it": "orologio",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "かさ",
          "kana": "かさ",
          "r": "kasa",
          "it": "ombrello",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "くるま",
          "kana": "くるま",
          "r": "kuruma",
          "it": "automobile",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "だれ",
          "kana": "だれ",
          "r": "dare",
          "it": "chi",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "なん",
          "kana": "なん",
          "r": "nan",
          "it": "cosa",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         }
        ],
        "sentences": [
@@ -2319,21 +2391,24 @@
          "kana": "いち",
          "r": "ichi",
          "it": "1",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "に",
          "kana": "に",
          "r": "ni",
          "it": "2",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "さん",
          "kana": "さん",
          "r": "san",
          "it": "3",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "よん",
@@ -2343,21 +2418,24 @@
          "role": "lang",
          "kanaAlts": [
           "し"
-         ]
+         ],
+         "acc": 1
         },
         {
          "jp": "ご",
          "kana": "ご",
          "r": "go",
          "it": "5",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "ろく",
          "kana": "ろく",
          "r": "roku",
          "it": "6",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "なな",
@@ -2367,14 +2445,16 @@
          "role": "lang",
          "kanaAlts": [
           "しち"
-         ]
+         ],
+         "acc": 1
         },
         {
          "jp": "はち",
          "kana": "はち",
          "r": "hachi",
          "it": "8",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "きゅう",
@@ -2384,21 +2464,24 @@
          "role": "lang",
          "kanaAlts": [
           "く"
-         ]
+         ],
+         "acc": 1
         },
         {
          "jp": "じゅう",
          "kana": "じゅう",
          "r": "jū",
          "it": "10",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "ひゃく",
          "kana": "ひゃく",
          "r": "hyaku",
          "it": "100",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         }
        ],
        "sentences": [
@@ -2613,70 +2696,80 @@
          "kana": "たべます",
          "r": "tabemasu",
          "it": "mangiare",
-         "role": "lang"
+         "role": "lang",
+         "acc": 3
         },
         {
          "jp": "のみます",
          "kana": "のみます",
          "r": "nomimasu",
          "it": "bere",
-         "role": "lang"
+         "role": "lang",
+         "acc": 3
         },
         {
          "jp": "いきます",
          "kana": "いきます",
          "r": "ikimasu",
          "it": "andare",
-         "role": "lang"
+         "role": "lang",
+         "acc": 3
         },
         {
          "jp": "きます",
          "kana": "きます",
          "r": "kimasu",
          "it": "venire",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "かえります",
          "kana": "かえります",
          "r": "kaerimasu",
          "it": "tornare (a casa)",
-         "role": "lang"
+         "role": "lang",
+         "acc": 4
         },
         {
          "jp": "みます",
          "kana": "みます",
          "r": "mimasu",
          "it": "guardare, vedere",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "よみます",
          "kana": "よみます",
          "r": "yomimasu",
          "it": "leggere",
-         "role": "lang"
+         "role": "lang",
+         "acc": 3
         },
         {
          "jp": "します",
          "kana": "します",
          "r": "shimasu",
          "it": "fare",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "みず",
          "kana": "みず",
          "r": "mizu",
          "it": "acqua",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "きのう",
          "kana": "きのう",
          "r": "kinō",
          "it": "ieri",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         }
        ],
        "sentences": [
@@ -2959,56 +3052,64 @@
          "kana": "がっこう",
          "r": "gakkō",
          "it": "scuola",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "うち",
          "kana": "うち",
          "r": "uchi",
          "it": "casa (propria)",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "えき",
          "kana": "えき",
          "r": "eki",
          "it": "stazione",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "レストラン",
          "kana": "レストラン",
          "r": "resutoran",
          "it": "ristorante",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "としょかん",
          "kana": "としょかん",
          "r": "toshokan",
          "it": "biblioteca",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "でんしゃ",
          "kana": "でんしゃ",
          "r": "densha",
          "it": "treno",
-         "role": "lang"
+         "role": "lang",
+         "acc": 0
         },
         {
          "jp": "バス",
          "kana": "バス",
          "r": "basu",
          "it": "autobus",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "あした",
          "kana": "あした",
          "r": "ashita",
          "it": "domani",
-         "role": "lang"
+         "role": "lang",
+         "acc": 3
         }
        ],
        "sentences": [
@@ -3285,63 +3386,72 @@
          "kana": "おおきい",
          "r": "ōkii",
          "it": "grande",
-         "role": "lang"
+         "role": "lang",
+         "acc": 3
         },
         {
          "jp": "ちいさい",
          "kana": "ちいさい",
          "r": "chiisai",
          "it": "piccolo",
-         "role": "lang"
+         "role": "lang",
+         "acc": 3
         },
         {
          "jp": "たかい",
          "kana": "たかい",
          "r": "takai",
          "it": "alto, costoso",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "やすい",
          "kana": "やすい",
          "r": "yasui",
          "it": "economico",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "おもしろい",
          "kana": "おもしろい",
          "r": "omoshiroi",
          "it": "interessante",
-         "role": "lang"
+         "role": "lang",
+         "acc": 4
         },
         {
          "jp": "しずか",
          "kana": "しずか",
          "r": "shizuka",
          "it": "tranquillo (agg. な)",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "きれい",
          "kana": "きれい",
          "r": "kirei",
          "it": "bello, pulito (agg. な)",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "げんき",
          "kana": "げんき",
          "r": "genki",
          "it": "in forma (agg. な)",
-         "role": "lang"
+         "role": "lang",
+         "acc": 1
         },
         {
          "jp": "まち",
          "kana": "まち",
          "r": "machi",
          "it": "città",
-         "role": "lang"
+         "role": "lang",
+         "acc": 2
         },
         {
          "jp": "この",

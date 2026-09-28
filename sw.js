@@ -1,12 +1,12 @@
 // Sillabario service worker: funziona offline e prende sempre la versione più recente quando c'è rete.
-const CACHE = 'sillabario-v6';
+const CACHE = 'sillabario-v7';
 const CORE = ['./', './index.html', './app.js', './courses.json', './ja.json', './strokes.json', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && !k.startsWith('sillabario-audio')).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   const req = e.request;

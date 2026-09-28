@@ -3,7 +3,7 @@
    Stato salvato in localStorage (chiave LS_KEY); la sincronizzazione remota si aggancia a Store. */
 'use strict';
 
-const APP_VERSION = '2.2';
+const APP_VERSION = '2.3';
 const LS_KEY = 'sillabario.v2';
 const DAY = 864e5;
 const $app = document.getElementById('app');
@@ -81,7 +81,7 @@ const readingForms = r => uniq([r.replace(/\(.*?\)/g, ''), stripOkuri(r)]);
 
 /* ============================== stato ============================== */
 function freshState() {
-  return { v: 2, course: 'ja', courses: {}, settings: { romaji: 'auto', goalMin: 15, rate: 0.75, reviewMax: 30, voice: '', sound: 1 }, log: {}, updatedAt: 0 };
+  return { v: 2, course: 'ja', courses: {}, settings: { romaji: 'auto', goalMin: 15, rate: 0.75, reviewMax: 30, voice: '', sound: 1, voiceSrc: 'neural', nvoice: 'ja-JP-NanamiNeural' }, log: {}, updatedAt: 0 };
 }
 const Store = {
   load() { try { const r = localStorage.getItem(LS_KEY); if (!r) return null; const s = JSON.parse(r); return s && s.v === 2 ? s : null; } catch (e) { return null; } },
@@ -301,8 +301,45 @@ function voice() {
   if (S.settings.voice) { const chosen = vs.find(v => v.voiceURI === S.settings.voice); if (chosen) return chosen; }
   return vs.slice().sort((a, b) => voiceScore(b) - voiceScore(a))[0];
 }
-const canListen = () => !!voice();
+const NVOICES = [['ja-JP-NanamiNeural', 'Nanami (femminile)'], ['ja-JP-KeitaNeural', 'Keita (maschile)']];
+const Neural = {
+  mem: new Map(), cur: null, cacheName: 'sillabario-audio-v1',
+  on() { return !!Sync.cfg() && S.settings.voiceSrc !== 'device'; },
+  url(text) { const c = Sync.cfg(); return Sync.base(c) + '/tts?t=' + encodeURIComponent(text) + '&v=' + encodeURIComponent(S.settings.nvoice || NVOICES[0][0]) + '&r=' + (S.settings.rate <= 0.8 ? 'slow' : 'normal'); },
+  async bytes(text) {
+    const url = this.url(text); let cache = null;
+    try { cache = await caches.open(this.cacheName); const hit = await cache.match(url); if (hit) return await hit.arrayBuffer(); } catch (e) { cache = null; }
+    const r = await fetch(url, { headers: { Authorization: 'Bearer ' + Sync.cfg().code } });
+    if (!r.ok) throw new Error('tts ' + r.status);
+    const ab = await r.arrayBuffer();
+    if (cache) try { await cache.put(url, new Response(ab.slice(0), { headers: { 'Content-Type': 'audio/mpeg' } })); } catch (e) { }
+    return ab;
+  },
+  decode(c, ab) { return new Promise((res, rej) => { const p = c.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); },
+  async buffer(text) {
+    const key = this.url(text); if (this.mem.has(key)) return this.mem.get(key);
+    const c = audioCtx(); if (!c) throw new Error('audio');
+    const b = await this.decode(c, await this.bytes(text)); this.mem.set(key, b); return b;
+  },
+  async play(text) {
+    const c = audioCtx(); const b = await this.buffer(text);
+    this.stop(); const src = c.createBufferSource(); src.buffer = b; src.connect(c.destination); src.start(); this.cur = src;
+    return new Promise(res => { src.onended = res; });
+  },
+  stop() { try { if (this.cur) this.cur.stop(); } catch (e) { } this.cur = null; },
+  async prefetch(texts, onStep) {
+    const list = uniq(texts.filter(Boolean)); let done = 0, fail = 0; let i = 0;
+    const worker = async () => { while (i < list.length) { const t = list[i++]; try { await this.bytes(t); } catch (e) { fail++; } done++; onStep && onStep(done, list.length, fail); } };
+    await Promise.all([worker(), worker(), worker()]); return { done, fail, total: list.length };
+  }
+};
+const canListen = () => Neural.on() || !!voice();
 function speak(text) {
+  if (!text) return;
+  if (Neural.on()) { Neural.play(String(text).replace(/[＿_]/g, '')).catch(() => speakDevice(text)); return; }
+  speakDevice(text);
+}
+function speakDevice(text) {
   if (!('speechSynthesis' in window) || !text) return;
   try {
     const u = new SpeechSynthesisUtterance(String(text).replace(/[＿_]/g, ''));
@@ -391,6 +428,25 @@ function openStrokes(ch, label, sayText) {
   el.querySelector('[data-close]').onclick = () => el.remove();
   el.querySelector('#replay').onclick = () => { const g = el.querySelector('#demoink'); g.innerHTML = ''; requestAnimationFrame(() => { g.innerHTML = strokeSVG(ch, { anim: true }); }); speak(sayText || ch); };
   speak(sayText || ch);
+}
+
+/* ============================== accento tonale (dati Kanjium, CC BY-SA 4.0) ============================== */
+function morae(kana) { const small = 'ゃゅょぁぃぅぇぉゎャュョァィゥェォヮ'; const out = []; for (const c of kana) { if (small.includes(c) && out.length) out[out.length - 1] += c; else out.push(c); } return out; }
+// altezza di ogni mora (1 alta, 0 bassa) e della particella che segue
+function pitchPattern(n, len) {
+  const h = []; for (let i = 1; i <= len; i++) h.push(n === 0 ? (i === 1 ? 0 : 1) : n === 1 ? (i === 1 ? 1 : 0) : (i === 1 ? 0 : i <= n ? 1 : 0));
+  return { h, particle: n === 0 ? 1 : 0 };
+}
+function pitchSVG(kana, n) {
+  if (n == null) return '';
+  const m = morae(kana); const { h, particle } = pitchPattern(n, m.length);
+  const W = 22, top = 7, bot = 25, H = 50; const w = (m.length + 1) * W;
+  const pts = h.concat([particle]).map((v, i) => [W / 2 + i * W, v ? top : bot]);
+  const line = pts.map(p => p.join(',')).join(' ');
+  const dots = pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.4" class="${i === m.length ? 'pt' : ''}"/>`).join('');
+  const txt = m.map((c, i) => `<text x="${W / 2 + i * W}" y="${H - 4}">${esc(c)}</text>`).join('');
+  const label = n === 0 ? 'piatto' : n === 1 ? 'discesa dopo la prima mora' : n === m.length ? 'discesa dopo l\'ultima mora' : 'discesa dopo la mora ' + n;
+  return `<svg class="pitch" viewBox="0 0 ${w} ${H}" width="${w}" height="${H}" role="img" aria-label="Accento: ${label}"><polyline points="${line}"/>${dots}${txt}</svg>`;
 }
 
 /* ============================== suoni ============================== */
@@ -532,9 +588,9 @@ function buildPractice(le) {
 function buildVerify(le) {
   const its = lessonItems(le); const used = new Set(); const qs = [];
   its.forEach(i => {
-    if (i.kind === 'grammar') { [1, 2].forEach(st => { const q = makeQ(i, st, { used, noListen: true }); if (q) qs.push(q); }); }
-    else if (i.kind === 'word' && i.role === 'read') qs.push(makeQ(i, pickOne([1, 2]), { noListen: true }));
-    else qs.push(makeQ(i, pickOne([1, 2]), { noListen: true }));
+    if (i.kind === 'grammar') { [1, 2].forEach(st => { const q = makeQ(i, st, { used, noListen: !Neural.on() }); if (q) qs.push(q); }); }
+    else if (i.kind === 'word' && i.role === 'read') qs.push(makeQ(i, pickOne([1, 2]), { noListen: !Neural.on() }));
+    else qs.push(makeQ(i, pickOne([1, 2]), { noListen: !Neural.on() }));
   });
   return shuffle(qs.filter(Boolean));
 }
@@ -548,12 +604,12 @@ function sampleAcross(groups, n) {
 function buildChapter(ch) {
   const used = new Set();
   const picked = sampleAcross(ch.lessons.map(lessonItems), 30);
-  return shuffle(picked.map(i => makeQ(i, i.kind === 'grammar' ? pickOne([1, 2]) : pickOne([1, 2, 2]), { used, noListen: true })).filter(Boolean));
+  return shuffle(picked.map(i => makeQ(i, i.kind === 'grammar' ? pickOne([1, 2]) : pickOne([1, 2, 2]), { used, noListen: !Neural.on() })).filter(Boolean));
 }
 function buildExam(l) {
   const used = new Set(); const n = (l.exam && l.exam.n) || 30;
   const picked = sampleAcross(l.chapters.flatMap(ch => ch.lessons.map(lessonItems)), n);
-  return shuffle(picked.map(i => makeQ(i, Math.random() < 0.6 ? 2 : 1, { used, noListen: true })).filter(Boolean));
+  return shuffle(picked.map(i => makeQ(i, Math.random() < 0.6 ? 2 : 1, { used, noListen: !Neural.on() })).filter(Boolean));
 }
 function buildReview() {
   const ids = dueIds().slice(0, S.settings.reviewMax); const used = new Set();
@@ -586,6 +642,7 @@ function startSession(kind, ctx = {}) {
     go({ screen: 'session' }); return;
   }
   SES = { kind, title, qs, i: 0, results: [], ctx, total: qs.length, t0: now() };
+  if (Neural.on()) Neural.prefetch(qs.flatMap(q => [q.say, q.audioOnly, q.sayAfter]));
   go({ screen: 'session' });
 }
 function requeue(q) {
@@ -674,8 +731,8 @@ const ICON_SAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 function render() {
   document.onkeydown = null;
   if (!IDX) return;
-  if (!prog().placed && !['session', 'result', 'settings'].includes(VIEW.screen)) return renderWelcome();
-  const f = { today: renderToday, path: renderPath, stats: renderStats, settings: renderSettings, lesson: renderLesson, session: renderSession, result: renderResult }[VIEW.screen];
+  if (!prog().placed && !['session', 'result', 'settings', 'speak'].includes(VIEW.screen)) return renderWelcome();
+  const f = { speak: renderSpeak, today: renderToday, path: renderPath, stats: renderStats, settings: renderSettings, lesson: renderLesson, session: renderSession, result: renderResult }[VIEW.screen];
   (f || renderToday)();
 }
 
@@ -777,7 +834,9 @@ function renderLesson() {
   if (le.kana) blocks += `<div class="box"><h3>Caratteri · tocca per ascoltare e vedere come si scrive</h3><div class="grid-k">${le.kana.map(k => `<button class="kcell" data-char="${esc(k.k)}" data-label="${esc(k.r)}" data-sayt="${esc(k.k)}"><span class="g">${esc(k.k)}</span><span class="r">${esc(k.r)}</span></button>`).join('')}</div></div>`;
   if (le.kanji) blocks += `<div class="box"><h3>Kanji · tocca per ascoltare e vedere come si scrive</h3><div class="grid-j">${le.kanji.map(k => `<button class="jcell" data-char="${esc(k.k)}" data-label="${esc(k.it)}" data-sayt="${esc(readingForms(k.kun[0])[1])}"><span class="g">${esc(k.k)}</span><span class="m">${esc(k.it)}</span><span class="r"><i>on</i> ${esc(k.on.join('・'))}</span><span class="r"><i>kun</i> ${esc(k.kun.join('・'))}</span></button>`).join('')}</div></div>`;
   const romaToggle = ro ? '' : '<button class="linkish small" data-roma>Mostra romaji</button>';
-  if (le.words) blocks += `<div class="box ${ro ? '' : 'hide-ro'}"><div class="box-h"><h3>${le.words[0].role === 'read' ? 'Parole da leggere' : 'Vocabolario'}</h3>${romaToggle}</div><div class="rows">${le.words.map(w => `<button class="row" data-say="${esc(w.jp)}"><span><span class="j">${esc(w.jp)}</span><span class="ro">${esc(w.r)}</span></span><span class="it">${esc(w.it)}</span></button>`).join('')}</div></div>`;
+  const hasAcc = le.words && le.words.some(w => w.acc != null);
+  if (le.words) blocks += `<div class="box ${ro ? '' : 'hide-ro'}"><div class="box-h"><h3>${le.words[0].role === 'read' ? 'Parole da leggere' : 'Vocabolario'}</h3>${romaToggle}</div><div class="rows">${le.words.map(w => `<button class="row" data-say="${esc(w.jp)}"><span>${w.acc != null ? pitchSVG(w.kana, w.acc) : `<span class="j">${esc(w.jp)}</span>`}<span class="ro">${esc(w.r)}</span></span><span class="it">${esc(w.it)}</span></button>`).join('')}</div>
+    ${hasAcc ? `<details class="howto"><summary>Cosa indica la linea sopra le parole?</summary><p>Il giapponese non ha un accento di intensità come l'italiano, ma di <b>altezza</b>: ogni mora (sillaba) si pronuncia alta o bassa. La linea mostra questo andamento; il pallino vuoto finale indica l'altezza della particella che segue (per esempio が o は). Due parole possono distinguersi solo per l'accento: はし "ponte" e はし "bacchette". Nel dubbio, ascolta e imita.</p></details>` : ''}</div>`;
   if (le.sentences && le.sentences.length && !le.sentences[0].build) blocks += `<div class="box ${ro ? '' : 'hide-ro'}"><div class="box-h"><h3>Esempi</h3>${romaToggle}</div><div class="rows">${le.sentences.map(s => `<button class="row" data-say="${esc(s.jp)}"><span><span class="j">${esc(s.jp)}</span><span class="ro">${esc(s.r)}</span></span><span class="it">${esc(s.it)}</span></button>`).join('')}</div></div>`;
   $app.innerHTML = shell(`
     <button class="back" id="back">← Percorso</button>
@@ -789,13 +848,14 @@ function renderLesson() {
     <ol class="steps">
       <li class="step ${pr ? 'done' : 'current'}"><span class="node">${pr ? '✓' : '1'}</span><div><b>Esercizi guidati</b><span>Dal riconoscimento alla produzione. Gli errori tornano finché non li correggi. Non danno voto.</span></div><button class="btn ${pr ? 'ghost' : ''}" id="practice">${pr ? 'Ripeti' : 'Inizia'}</button></li>
       <li class="step ${pd ? 'done' : pr ? 'current' : 'locked'}"><span class="node">${pd ? '✓' : '2'}</span><div><b>Verifica</b><span>${pd ? (L.best === 'P' ? 'Superata al test d\'ingresso.' : 'Superata con ' + L.best + '%.') : 'Una domanda su ogni elemento della lezione. Serve almeno l\'80%.'}${pd ? '' : ' Supera la verifica e gli elementi entrano nei ripassi.'}</span></div><button class="btn ${pd ? 'ghost' : ''}" id="verify" ${pr || pd ? '' : 'disabled'}>${pd ? 'Ripeti' : 'Inizia'}</button></li>
-      <li class="step locked"><span class="node">3</span><div><b>Pronuncia</b><span>Ripetizione con valutazione automatica: arriva con il collegamento ad Azure.</span></div><button class="btn ghost" disabled>Presto</button></li>
+      <li class="step ${L.speak != null ? 'done' : Sync.cfg() ? '' : 'locked'}"><span class="node">${L.speak != null ? '✓' : '3'}</span><div><b>Pronuncia</b><span>${Sync.cfg() ? (L.speak != null ? 'Punteggio migliore: ' + L.speak + '/100. ' : '') + 'Ripeti parole e frasi ad alta voce: ricevi un punteggio per ogni parola. Facoltativa, non blocca il percorso.' : 'Collega il tuo server nelle Impostazioni per attivare la valutazione della pronuncia.'}</span></div><button class="btn ghost" id="speakbtn" ${Sync.cfg() && speakItems(le).length ? '' : 'disabled'}>${L.speak != null ? 'Ripeti' : 'Inizia'}</button></li>
     </ol>`, 'path');
   bindShell(); bindSay();
   $app.querySelectorAll('[data-char]').forEach(b => b.onclick = () => { if (hasStrokes(b.dataset.char)) openStrokes(b.dataset.char, b.dataset.label, b.dataset.sayt); else speak(b.dataset.sayt); });
   document.getElementById('back').onclick = () => go({ screen: 'path' });
   document.getElementById('practice').onclick = () => startSession('practice', { le });
   document.getElementById('verify').onclick = () => { if (pr || pd) startSession('verify', { le }); };
+  document.getElementById('speakbtn').onclick = () => startSpeak(le);
   $app.querySelectorAll('[data-roma]').forEach(b => b.onclick = () => { const box = b.closest('.box'); box.classList.toggle('hide-ro'); b.textContent = box.classList.contains('hide-ro') ? 'Mostra romaji' : 'Nascondi romaji'; });
 }
 
@@ -998,6 +1058,111 @@ function advance() {
   s.i++; renderSession(); window.scrollTo(0, 0);
 }
 
+/* ============================== pronuncia (Azure, tramite il server) ============================== */
+function speakItems(le) {
+  if (!le) return [{ jp: 'こんにちは', kana: 'こんにちは', r: 'konnichiwa', it: 'buongiorno' }, { jp: 'ありがとう', kana: 'ありがとう', r: 'arigatō', it: 'grazie' }];
+  const ws = (le.words || []).map(w => ({ jp: w.jp, kana: w.kana, r: w.r, it: w.it, acc: w.acc }));
+  const ss = (le.sentences || []).filter(x => !x.build).map(x => ({ jp: x.jp, kana: x.jp, r: x.r, it: x.it }));
+  if (le.kanji) return le.kanji.map(k => ({ jp: readingForms(k.kun[0])[1], kana: readingForms(k.kun[0])[1], r: '', it: k.k + ' · ' + k.it }));
+  return shuffle(ws).slice(0, ss.length ? 5 : 7).concat(shuffle(ss).slice(0, 3));
+}
+// Registrazione: PCM grezzo dal microfono, poi WAV mono 16 kHz (il formato richiesto da Azure)
+const Rec = {
+  stream: null, src: null, proc: null, chunks: [], rate: 48000, level: 0, t0: 0,
+  async start() {
+    const c = audioCtx(); if (!c) throw new Error('Audio non disponibile su questo browser.');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('Questo browser non permette di usare il microfono.');
+    this.stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+    this.src = c.createMediaStreamSource(this.stream); this.proc = c.createScriptProcessor(4096, 1, 1); this.chunks = []; this.rate = c.sampleRate; this.t0 = Date.now();
+    this.proc.onaudioprocess = e => { const d = e.inputBuffer.getChannelData(0); this.chunks.push(new Float32Array(d)); let sq = 0; for (let i = 0; i < d.length; i += 8) sq += d[i] * d[i]; this.level = Math.min(1, Math.sqrt(sq / (d.length / 8)) * 6); };
+    this.src.connect(this.proc); this.proc.connect(c.destination);
+  },
+  stop() {
+    try { this.proc && this.proc.disconnect(); this.src && this.src.disconnect(); } catch (e) { }
+    if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+    const n = this.chunks.reduce((a, c) => a + c.length, 0); const all = new Float32Array(n); let o = 0; for (const c of this.chunks) { all.set(c, o); o += c.length; }
+    this.stream = this.src = this.proc = null; this.level = 0;
+    return { samples: all, rate: this.rate, secs: n / this.rate };
+  }
+};
+function toWav16k(samples, rate) {
+  const ratio = rate / 16000; const n = Math.floor(samples.length / ratio); const out = new Int16Array(n);
+  for (let i = 0; i < n; i++) { const x = i * ratio, i0 = Math.floor(x), f = x - i0; const v = (samples[i0] || 0) * (1 - f) + (samples[i0 + 1] || 0) * f; out[i] = Math.max(-1, Math.min(1, v)) * 0x7fff; }
+  const buf = new ArrayBuffer(44 + out.length * 2); const dv = new DataView(buf);
+  const w = (o, str) => { for (let i = 0; i < str.length; i++) dv.setUint8(o + i, str.charCodeAt(i)); };
+  w(0, 'RIFF'); dv.setUint32(4, 36 + out.length * 2, true); w(8, 'WAVE'); w(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+  dv.setUint32(24, 16000, true); dv.setUint32(28, 32000, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); w(36, 'data'); dv.setUint32(40, out.length * 2, true);
+  new Int16Array(buf, 44).set(out); return buf;
+}
+async function assess(ref, wav) {
+  const c = Sync.cfg(); if (!c) throw new Error('Server non collegato.');
+  let r; try { r = await fetch(Sync.base(c) + '/assess?ref=' + encodeURIComponent(ref), { method: 'POST', body: wav, headers: { Authorization: 'Bearer ' + c.code, 'Content-Type': 'audio/wav' } }); }
+  catch (e) { throw new Error('Server non raggiungibile: controlla la connessione.'); }
+  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || ('Errore del server (' + r.status + ').'));
+  return d;
+}
+let SPK = null;
+function startSpeak(le) { SPK = { le, items: speakItems(le), i: 0, res: [], st: 'idle', last: null, err: null, rec: null }; go({ screen: 'speak' }); }
+const scoreLabel = v => v >= 85 ? 'Ottima' : v >= 70 ? 'Buona' : v >= 50 ? 'Da migliorare' : 'Riprova';
+const scoreCls = v => v >= 80 ? 'ok' : v >= 60 ? 'mid' : 'no';
+function renderSpeak() {
+  const k = SPK; if (!k) return go({ screen: 'today' });
+  const it = k.items[k.i];
+  if (!it) { // fine sessione
+    const vals = k.res.filter(x => x != null); const avg = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+    if (k.le && avg != null) { const L = prog().lessons[k.le.id] || (prog().lessons[k.le.id] = {}); L.speak = Math.max(L.speak || 0, avg); save(); }
+    if (avg != null && avg >= 70) setTimeout(() => sfx('done'), 150);
+    $app.innerHTML = `<div class="page"><main class="wrap"><section class="result"><span class="eyebrow">Pronuncia${k.le ? ' · ' + esc(k.le.title) : ' · prova'}</span>
+      ${avg != null ? `<div class="score num">${avg}<small>/100</small></div><h1>${scoreLabel(avg)}</h1><p class="lead center">Media dei punteggi di pronuncia su ${vals.length} ${vals.length === 1 ? 'prova' : 'prove'}. Il punteggio combina accuratezza dei suoni, fluidità e completezza.</p>` : '<h1>Nessuna valutazione</h1><p class="lead center">Non è stata registrata nessuna prova.</p>'}
+      <div class="cta-row center"><button class="btn" id="again">Ripeti</button><button class="btn ghost" id="out">${k.le ? 'Torna alla lezione' : 'Torna alle impostazioni'}</button></div></section></main></div>`;
+    document.getElementById('again').onclick = () => startSpeak(k.le);
+    document.getElementById('out').onclick = () => { const le = k.le; SPK = null; go(le ? { screen: 'lesson', id: le.id } : { screen: 'settings' }); };
+    return;
+  }
+  const ro = showRomaji(k.le ? k.le.level : null) || !k.le;
+  const L = k.last;
+  let result = '';
+  if (k.st === 'wait') result = '<p class="hint">Valutazione in corso…</p>';
+  else if (k.err) result = `<div class="fb no"><b>${esc(k.err)}</b></div>`;
+  else if (L && L.status !== 'Success') result = `<div class="fb no"><b>Non ho sentito nulla di chiaro</b><div class="ex">Avvicina il telefono, parla con voce normale e riprova. Azure ha risposto: ${esc(L.status)}.</div></div>`;
+  else if (L) result = `<div class="spk-res"><div class="spk-top"><div class="spk-score ${scoreCls(L.pron)}"><b class="num">${Math.round(L.pron)}</b><span>${scoreLabel(L.pron)}</span></div>
+      <div class="spk-bars">${[['Accuratezza', L.accuracy], ['Fluidità', L.fluency], ['Completezza', L.completeness]].map(([n, v]) => `<div class="sb"><span>${n}</span><div class="meter"><i class="${scoreCls(v)}" style="width:${Math.round(v || 0)}%"></i></div><span class="num">${Math.round(v || 0)}</span></div>`).join('')}</div></div>
+      <div class="spk-words">${L.words.map(w => `<span class="sw ${w.err !== 'None' ? 'no' : scoreCls(w.acc)}" title="${Math.round(w.acc || 0)}"><span class="jp">${esc(w.w)}</span><small class="num">${w.err === 'Omission' ? 'omessa' : w.err === 'Insertion' ? 'in più' : Math.round(w.acc || 0)}</small></span>`).join('')}</div>
+      <p class="hint left">Azure ha capito: <span class="jp">${esc(L.text || '—')}</span></p></div>`;
+  $app.innerHTML = `<div class="page session"><main class="wrap">
+    <div class="q-top"><button class="x" id="quit" aria-label="Esci">×</button><div class="bar"><i style="width:${Math.round(k.i / k.items.length * 100)}%"></i></div><span class="q-count num">${k.i + 1}/${k.items.length}</span></div>
+    <span class="q-mode">Pronuncia${k.le ? ' · ' + esc(k.le.title) : ' · prova del microfono'}</span>
+    <h2 class="q-prompt">Ascolta e ripeti ad alta voce</h2><p class="q-sub">«${esc(it.it)}»</p>
+    <div class="stage"><div class="stage-main">${it.acc != null ? pitchSVG(it.kana, it.acc).replace('class="pitch"', 'class="pitch big"') : `<span class="${it.jp.length > 8 ? 'sent' : 'word'}">${esc(it.jp)}</span>`}<button class="say" id="model" aria-label="Ascolta il modello">${ICON_SAY}</button></div>${ro && it.r ? `<span class="stage-ro">${esc(it.r)}</span>` : ''}</div>
+    <div class="rec-wrap"><button class="rec ${k.st === 'rec' ? 'on' : ''}" id="rec" ${k.st === 'wait' ? 'disabled' : ''} aria-label="${k.st === 'rec' ? 'Ferma la registrazione' : 'Registra'}"><span class="dot"></span></button>
+      <span class="rec-lbl" id="reclbl">${k.st === 'rec' ? 'Sto ascoltando… tocca per fermare' : k.st === 'wait' ? 'Invio…' : L ? 'Tocca per riprovare' : 'Tocca e parla'}</span>
+      <div class="lvl"><i id="lvl"></i></div></div>
+    ${result}
+    <div class="q-foot"><div class="cta-row">${k.rec ? '<button class="btn ghost" id="mine">Riascolta la tua voce</button>' : ''}<button class="btn ${L && L.status === 'Success' ? '' : 'ghost'}" id="next">${L && L.status === 'Success' ? 'Continua' : 'Salta'}</button></div></div>
+  </main></div>`;
+  document.getElementById('quit').onclick = () => { if (k.st === 'rec') Rec.stop(); const le = k.le; SPK = null; go(le ? { screen: 'lesson', id: le.id } : { screen: 'settings' }); };
+  document.getElementById('model').onclick = () => speak(it.jp);
+  document.getElementById('next').onclick = () => { k.res.push(L && L.status === 'Success' ? L.pron : null); k.i++; k.last = null; k.err = null; k.rec = null; k.st = 'idle'; renderSpeak(); window.scrollTo(0, 0); };
+  const mine = document.getElementById('mine'); if (mine) mine.onclick = async () => { const c = audioCtx(); try { const b = await Neural.decode(c, k.rec.slice(0)); Neural.stop(); const src = c.createBufferSource(); src.buffer = b; src.connect(c.destination); src.start(); Neural.cur = src; } catch (e) { toast('Non riesco a riprodurre la registrazione.'); } };
+  const btn = document.getElementById('rec');
+  btn.onclick = async () => {
+    if (k.st === 'rec') return finishRec();
+    k.err = null; k.last = null;
+    try { Neural.stop(); await Rec.start(); } catch (e) { k.err = e && e.name === 'NotAllowedError' ? 'Accesso al microfono negato. Consentilo nelle impostazioni del browser (su iPhone: Impostazioni → Safari → Microfono) e riprova.' : (e.message || 'Microfono non disponibile.'); renderSpeak(); return; }
+    k.st = 'rec'; renderSpeak();
+    const tick = () => { if (k.st !== 'rec') return; const el = document.getElementById('lvl'); if (el) el.style.width = Math.round(Rec.level * 100) + '%'; if (Date.now() - Rec.t0 > 8000) return finishRec(); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  };
+  async function finishRec() {
+    const r = Rec.stop(); k.st = 'wait'; renderSpeak();
+    if (r.secs < 0.4) { k.st = 'idle'; k.err = 'Registrazione troppo breve: tocca il pulsante, pronuncia la parola e poi tocca di nuovo.'; return renderSpeak(); }
+    const wav = toWav16k(r.samples, r.rate); k.rec = wav;
+    try { k.last = await assess(it.jp, wav); if (k.last.status === 'Success') sfx(k.last.pron >= 70 ? 'ok' : 'bad'); }
+    catch (e) { k.err = e.message; }
+    k.st = 'idle'; if (SPK === k) renderSpeak();
+  }
+}
+
 /* ============================== risultati ============================== */
 function renderResult() {
   const r = VIEW.res;
@@ -1093,7 +1258,12 @@ function renderSettings() {
       <div class="set-row col"><div><b>Obiettivo giornaliero</b><span>Minuti di studio al giorno.</span></div>${seg('goalMin', st.goalMin, [[5, '5'], [10, '10'], [15, '15'], [20, '20'], [30, '30']])}</div>
       <div class="set-row col"><div><b>Ripassi per sessione</b><span>Quanti elementi al massimo in una sessione di ripasso.</span></div>${seg('reviewMax', st.reviewMax, [[20, '20'], [30, '30'], [50, '50'], [100, '100']])}</div>
       <div class="set-row col"><div><b>Suoni</b><span>Effetti sonori per risposte giuste, errori e lezioni superate.</span></div>${seg('sound', st.sound, [[1, 'Attivi'], [0, 'Disattivati']])}</div>
-      <div class="set-row col"><div><b>Voce</b><span>${canListen() ? 'Voce in uso: ' + esc(voice().name) + ' (' + voiceQuality(voice()) + ').' : 'Nessuna voce giapponese trovata sul dispositivo: gli esercizi di ascolto vengono saltati.'}${canListen() && courseVoices().every(v => voiceQuality(v) === 'base') ? ' Sul dispositivo c\'è solo la versione base: puoi scaricarne una di qualità migliore dalle impostazioni del telefono (vedi sotto).' : ''}</span></div>
+      ${Sync.cfg() ? `<div class="set-row col"><div><b>Voce neurale</b><span>Voce giapponese naturale generata da Azure, uguale su tutti i dispositivi. Ogni frase si genera una volta sola e poi resta salvata, anche per l'uso offline.</span></div>
+        ${seg('voiceSrc', st.voiceSrc || 'neural', [['neural', 'Neurale (Azure)'], ['device', 'Del dispositivo']])}
+        ${(st.voiceSrc || 'neural') === 'neural' ? seg('nvoice', st.nvoice || NVOICES[0][0], NVOICES) : ''}
+        ${(st.voiceSrc || 'neural') === 'neural' ? '<div class="cta-row"><button class="btn ghost" id="dlaudio">Scarica l\'audio del corso</button></div><div class="msg" id="dlmsg"></div>' : ''}
+        <button class="linkish small" id="testmic">Prova microfono e pronuncia</button></div>` : ''}
+      <div class="set-row col"><div><b>Voce del dispositivo</b><span>${Neural.on() ? 'Usata solo se il server non è raggiungibile. ' : ''}${voice() ? 'Voce in uso: ' + esc(voice().name) + ' (' + voiceQuality(voice()) + ').' : 'Nessuna voce giapponese trovata sul dispositivo.'}${voice() && courseVoices().every(v => voiceQuality(v) === 'base') ? ' Sul dispositivo c\'è solo la versione base: puoi scaricarne una di qualità migliore dalle impostazioni del telefono (vedi sotto).' : ''}</span></div>
         ${courseVoices().length > 1 ? `<select class="sel" id="voicesel"><option value="">Automatica (la migliore disponibile)</option>${courseVoices().slice().sort((a, b) => voiceScore(b) - voiceScore(a)).map(v => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === S.settings.voice ? 'selected' : ''}>${esc(v.name)} · ${voiceQuality(v)}</option>`).join('')}</select>` : ''}
         <details class="howto"><summary>Come avere una voce più naturale su iPhone</summary><p>Apri Impostazioni → Accessibilità → Contenuti letti ad alta voce → Voci → Giapponese. Scegli una voce (per esempio Kyoko o Otoya) e scarica la versione <b>Avanzata</b> o <b>Premium</b>, se disponibile. Poi chiudi e riapri Sillabario: la sceglie da sola.</p></details></div>
       <div class="set-row col"><div><b>Velocità della voce</b><span>Per imparare conviene partire lenti.</span></div>${seg('rate', st.rate, [[0.6, 'Molto lenta'], [0.75, 'Lenta'], [0.9, 'Media'], [1, 'Naturale']])}<button class="linkish small" id="testvoice">Prova la voce</button></div>
@@ -1114,12 +1284,20 @@ function renderSettings() {
       <div class="set-row"><div><b>Azzera i progressi</b><span>Cancella lezioni, ripassi e statistiche di questo corso.</span></div><button class="btn ghost danger" id="reset">Azzera</button></div>
       <div class="confirm" id="resetc" hidden><p>Sei sicuro? L'operazione non si può annullare. Se vuoi conservare i dati, fai prima un backup.</p><div class="cta-row"><button class="btn bad" id="resety">Sì, azzera</button><button class="btn ghost" id="resetn">Annulla</button></div></div>
     </section>
-    <p class="foot-note">Sillabario v${APP_VERSION} · ${Sync.cfg() ? 'progressi sincronizzati con il tuo server' : 'progressi salvati su questo dispositivo'}<br>Ordine dei tratti: <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener">KanjiVG</a> © Ulrich Apel, licenza CC BY-SA 3.0</p>`, 'settings');
+    <p class="foot-note">Sillabario v${APP_VERSION} · ${Sync.cfg() ? 'progressi sincronizzati con il tuo server' : 'progressi salvati su questo dispositivo'}<br>Ordine dei tratti: <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener">KanjiVG</a> © Ulrich Apel, CC BY-SA 3.0 · Accento tonale: <a href="https://github.com/mifunetoshiro/kanjium" target="_blank" rel="noopener">Kanjium</a>, CC BY-SA 4.0 · Voce e pronuncia: Microsoft Azure</p>`, 'settings');
   bindShell();
   $app.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; const v = b.dataset.v; S.settings[k] = isNaN(+v) ? v : +v; save(); renderSettings(); });
   document.getElementById('testvoice').onclick = () => speak('こんにちは。にほんごを べんきょうしましょう。');
+  $app.querySelectorAll('[data-set=nvoice],[data-set=voiceSrc],[data-set=rate]').forEach(b => b.addEventListener('click', () => Neural.mem.clear()));
   const vsel = document.getElementById('voicesel'); if (vsel) vsel.onchange = () => { S.settings.voice = vsel.value; save(); renderSettings(); speak('こんにちは。'); };
   document.getElementById('backup').onclick = openBackup;
+  const dla = document.getElementById('dlaudio'); if (dla) dla.onclick = async () => {
+    const m = document.getElementById('dlmsg'); dla.disabled = true;
+    const texts = IDX.lessons.flatMap(le => [...(le.kana || []).map(k => k.k), ...(le.words || []).map(w => w.jp), ...(le.sentences || []).filter(x => !x.build).map(x => x.jp), ...(le.kanji || []).map(k => readingForms(k.kun[0])[1])]);
+    const r = await Neural.prefetch(texts, (d, t) => { m.className = 'msg'; m.textContent = 'Scaricamento: ' + d + ' di ' + t + '…'; });
+    m.className = r.fail ? 'msg no' : 'msg ok'; m.textContent = r.fail ? 'Scaricati ' + (r.total - r.fail) + ' audio su ' + r.total + '. Riprova più tardi per i mancanti.' : 'Fatto: ' + r.total + ' audio disponibili anche senza connessione.'; dla.disabled = false;
+  };
+  const tm = document.getElementById('testmic'); if (tm) tm.onclick = () => startSpeak(null);
   document.getElementById('syconnect').onclick = async () => {
     const m = document.getElementById('symsg'); const url = document.getElementById('syurl').value.trim(); const code = document.getElementById('sycode').value;
     if (!/^https?:\/\//.test(url) || !code) { m.className = 'msg no'; m.textContent = 'Inserisci l\'indirizzo completo (con https://) e il codice.'; return; }
@@ -1217,5 +1395,5 @@ window.__sill = {
   },
   next() { advance(); },
   go(s) { go({ screen: s }); },
-  api: { mergeState, Sync, judgeStroke, samplePath, matchQ, traceQ, makeQ, buildPractice, buildVerify, buildChapter, buildExam, buildReview, placementGroup, lessonItems, grammarTemplates, isRight, inputToKana }
+  api: { toWav16k, pitchPattern, morae, speakItems, Neural, mergeState, Sync, judgeStroke, samplePath, matchQ, traceQ, makeQ, buildPractice, buildVerify, buildChapter, buildExam, buildReview, placementGroup, lessonItems, grammarTemplates, isRight, inputToKana }
 };

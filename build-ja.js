@@ -3,9 +3,12 @@
 const fs = require('fs');
 const path = require('path');
 
+// Accento tonale (posizione della discesa, 0 = piatto). Fonte: Kanjium (github.com/mifunetoshiro/kanjium), CC BY-SA 4.0.
+// Verbi in -ます: regola standard, discesa dopo ま. Omesse le parole con dati incerti (これ, それ, あれ, この, いいえ).
+const ACC = {"あい": 1, "いえ": 2, "うえ": 0, "あお": 1, "かさ": 1, "すし": 2, "あき": 1, "こえ": 1, "しお": 2, "いす": 0, "いぬ": 2, "ねこ": 1, "なつ": 2, "くち": 0, "つくえ": 0, "そと": 1, "はな": 2, "ひと": 0, "ふね": 1, "みみ": 2, "ほし": 0, "むし": 0, "やま": 2, "ゆき": 2, "よる": 1, "さくら": 0, "わたし": 0, "ほん": 1, "かぎ": 2, "ごはん": 1, "ぶた": 0, "でんわ": 0, "えんぴつ": 0, "ひざ": 0, "きって": 0, "おちゃ": 0, "しゃしん": 0, "がっこう": 0, "きょう": 1, "いっしょ": 0, "アイス": 1, "ココア": 1, "キウイ": 1, "テニス": 1, "ネクタイ": 1, "ナイフ": 1, "テキスト": 1, "カメラ": 1, "トマト": 1, "ホテル": 1, "メロン": 1, "ミルク": 1, "コーヒー": 3, "ケーキ": 1, "テレビ": 1, "パン": 1, "ピザ": 1, "がくせい": 0, "せんせい": 3, "かいしゃいん": 3, "いしゃ": 0, "にほんじん": 4, "ともだち": 0, "はい": 1, "かばん": 0, "とけい": 0, "くるま": 0, "だれ": 1, "なん": 1, "いち": 2, "に": 1, "さん": 0, "よん": 1, "ご": 1, "ろく": 2, "なな": 1, "はち": 2, "きゅう": 1, "じゅう": 1, "ひゃく": 2, "みず": 0, "きのう": 2, "うち": 0, "えき": 1, "レストラン": 1, "としょかん": 2, "でんしゃ": 0, "バス": 1, "あした": 3, "おおきい": 3, "ちいさい": 3, "たかい": 2, "やすい": 2, "おもしろい": 4, "しずか": 1, "きれい": 1, "げんき": 1, "まち": 2, "たべます": 3, "のみます": 3, "いきます": 3, "きます": 2, "かえります": 4, "みます": 2, "よみます": 3, "します": 2};
 const K = str => str.trim().split(/\s+/).map(p => { const [k, r] = p.split(':'); const rs = r.split('/'); return { k, r: rs[0], alt: rs }; });
-const RW = list => list.map(([jp, r, it]) => ({ jp, kana: jp, r, it, role: 'read' }));
-const LW = list => list.map(([jp, r, it, alts]) => ({ jp, kana: jp, r, it, role: 'lang', ...(alts ? { kanaAlts: alts } : {}) }));
+const RW = list => list.map(([jp, r, it]) => ({ jp, kana: jp, r, it, role: 'read', ...(ACC[jp] != null ? { acc: ACC[jp] } : {}) }));
+const LW = list => list.map(([jp, r, it, alts]) => ({ jp, kana: jp, r, it, role: 'lang', ...(alts ? { kanaAlts: alts } : {}), ...(ACC[jp] != null ? { acc: ACC[jp] } : {}) }));
 // frase: [jp, romaji, italiano, token separati da |, gp, opzioni]
 const SEN = list => list.map(([jp, r, it, t, gp, o = {}]) => ({ jp, r, it, tokens: t.split('|'), gp, ...(o.alts ? { alts: o.alts.map(a => a.split('|')) } : {}), ...(o.gap ? { gap: o.gap } : {}) }));
 
