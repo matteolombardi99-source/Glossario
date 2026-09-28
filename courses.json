@@ -1,0 +1,10 @@
+{
+ "courses": [
+  {"id": "ja", "name": "Giapponese", "native": "日本語", "file": "ja.json"},
+  {"id": "en", "name": "Inglese", "native": "English", "soon": true},
+  {"id": "es", "name": "Spagnolo", "native": "Español", "soon": true},
+  {"id": "de", "name": "Tedesco", "native": "Deutsch", "soon": true},
+  {"id": "fr", "name": "Francese", "native": "Français", "soon": true},
+  {"id": "ko", "name": "Coreano", "native": "한국어", "soon": true}
+ ]
+}

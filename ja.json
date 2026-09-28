@@ -1,0 +1,3431 @@
+{
+ "id": "ja",
+ "name": "Giapponese",
+ "native": "日本語",
+ "tts": "ja-JP",
+ "version": "2026-09-28",
+ "levels": [
+  {
+   "id": "L0",
+   "code": "Livello 0",
+   "title": "Kana: i due alfabeti",
+   "desc": "Prima di tutto si impara a leggere. Hiragana e katakana sono sillabari: ogni segno è un suono. Senza di loro non si va avanti.",
+   "exam": {
+    "n": 30,
+    "pass": 0.8
+   },
+   "chapters": [
+    {
+     "id": "L0-hira",
+     "title": "Hiragana",
+     "lessons": [
+      {
+       "id": "h1",
+       "script": "Hiragana",
+       "title": "Le cinque vocali",
+       "glyph": "あいうえお",
+       "goal": "Riconoscere, leggere e scrivere le cinque vocali hiragana.",
+       "theory": [
+        "Il giapponese si scrive con <b>tre sistemi</b> insieme: <b>hiragana</b> (parole giapponesi e desinenze grammaticali), <b>katakana</b> (parole straniere) e <b>kanji</b> (ideogrammi di origine cinese, che portano il significato).",
+        "Si comincia dagli hiragana: 46 segni di base, ognuno dei quali rappresenta una sillaba intera, non una singola lettera. Il sistema è ordinato in una tabella: prima le cinque vocali, poi le righe consonante + vocale, sempre nell'ordine a, i, u, e, o.",
+        "Le vocali si pronunciano quasi come in italiano: <span class=\"jp\">あ</span> a, <span class=\"jp\">い</span> i, <span class=\"jp\">う</span> u (con le labbra poco arrotondate), <span class=\"jp\">え</span> e, <span class=\"jp\">お</span> o. Sono sempre brevi e nette, senza dittonghi: <span class=\"jp\">あい</span> si legge a-i, due sillabe distinte."
+       ],
+       "kana": [
+        {
+         "k": "あ",
+         "r": "a",
+         "alt": [
+          "a"
+         ]
+        },
+        {
+         "k": "い",
+         "r": "i",
+         "alt": [
+          "i"
+         ]
+        },
+        {
+         "k": "う",
+         "r": "u",
+         "alt": [
+          "u"
+         ]
+        },
+        {
+         "k": "え",
+         "r": "e",
+         "alt": [
+          "e"
+         ]
+        },
+        {
+         "k": "お",
+         "r": "o",
+         "alt": [
+          "o"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "あい",
+         "kana": "あい",
+         "r": "ai",
+         "it": "amore",
+         "role": "read"
+        },
+        {
+         "jp": "いえ",
+         "kana": "いえ",
+         "r": "ie",
+         "it": "casa",
+         "role": "read"
+        },
+        {
+         "jp": "うえ",
+         "kana": "うえ",
+         "r": "ue",
+         "it": "sopra",
+         "role": "read"
+        },
+        {
+         "jp": "あお",
+         "kana": "あお",
+         "r": "ao",
+         "it": "blu",
+         "role": "read"
+        },
+        {
+         "jp": "いいえ",
+         "kana": "いいえ",
+         "r": "iie",
+         "it": "no",
+         "role": "read"
+        }
+       ]
+      },
+      {
+       "id": "h2",
+       "script": "Hiragana",
+       "title": "Righe K e S",
+       "glyph": "かさ",
+       "goal": "Leggere le righe K e S e le prime parole di due sillabe.",
+       "theory": [
+        "Ogni riga della tabella unisce una consonante alle cinque vocali, nello stesso ordine: a, i, u, e, o.",
+        "Riga K: <span class=\"jp\">か き く け こ</span> (ka ki ku ke ko). La <b>k</b> è sempre dura, come in \"casa\", anche davanti a i ed e: <span class=\"jp\">き</span> si legge \"chi\" italiano, mai \"ci\".",
+        "Riga S: <span class=\"jp\">さ し す せ そ</span>. Prima irregolarità della tabella: <span class=\"jp\">し</span> non si legge \"si\" ma <b>shi</b>, come in \"scivolo\". La s è sempre sorda, come in \"sasso\"."
+       ],
+       "kana": [
+        {
+         "k": "か",
+         "r": "ka",
+         "alt": [
+          "ka"
+         ]
+        },
+        {
+         "k": "き",
+         "r": "ki",
+         "alt": [
+          "ki"
+         ]
+        },
+        {
+         "k": "く",
+         "r": "ku",
+         "alt": [
+          "ku"
+         ]
+        },
+        {
+         "k": "け",
+         "r": "ke",
+         "alt": [
+          "ke"
+         ]
+        },
+        {
+         "k": "こ",
+         "r": "ko",
+         "alt": [
+          "ko"
+         ]
+        },
+        {
+         "k": "さ",
+         "r": "sa",
+         "alt": [
+          "sa"
+         ]
+        },
+        {
+         "k": "し",
+         "r": "shi",
+         "alt": [
+          "shi",
+          "si"
+         ]
+        },
+        {
+         "k": "す",
+         "r": "su",
+         "alt": [
+          "su"
+         ]
+        },
+        {
+         "k": "せ",
+         "r": "se",
+         "alt": [
+          "se"
+         ]
+        },
+        {
+         "k": "そ",
+         "r": "so",
+         "alt": [
+          "so"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "かさ",
+         "kana": "かさ",
+         "r": "kasa",
+         "it": "ombrello",
+         "role": "read"
+        },
+        {
+         "jp": "すし",
+         "kana": "すし",
+         "r": "sushi",
+         "it": "sushi",
+         "role": "read"
+        },
+        {
+         "jp": "あき",
+         "kana": "あき",
+         "r": "aki",
+         "it": "autunno",
+         "role": "read"
+        },
+        {
+         "jp": "こえ",
+         "kana": "こえ",
+         "r": "koe",
+         "it": "voce",
+         "role": "read"
+        },
+        {
+         "jp": "しお",
+         "kana": "しお",
+         "r": "shio",
+         "it": "sale",
+         "role": "read"
+        },
+        {
+         "jp": "いす",
+         "kana": "いす",
+         "r": "isu",
+         "it": "sedia",
+         "role": "read"
+        }
+       ]
+      },
+      {
+       "id": "h3",
+       "script": "Hiragana",
+       "title": "Righe T e N",
+       "glyph": "たな",
+       "goal": "Leggere le righe T e N, con le irregolarità ち e つ.",
+       "theory": [
+        "Riga T: <span class=\"jp\">た ち つ て と</span>. Due irregolarità: <span class=\"jp\">ち</span> si legge <b>chi</b> (come \"ci\" di \"cibo\") e <span class=\"jp\">つ</span> si legge <b>tsu</b> (come la \"z\" di \"pizza\").",
+        "Riga N: <span class=\"jp\">な に ぬ ね の</span>, tutta regolare. <span class=\"jp\">の</span> è anche una particella grammaticale molto usata: la ritroverai nel livello N5.",
+        "Attenzione alle coppie simili: <span class=\"jp\">ぬ</span> e <span class=\"jp\">め</span> (ぬ ha un ricciolo finale), <span class=\"jp\">ね</span> e <span class=\"jp\">れ</span>, <span class=\"jp\">わ</span> (ne, re, wa: le ultime due le vedrai più avanti)."
+       ],
+       "kana": [
+        {
+         "k": "た",
+         "r": "ta",
+         "alt": [
+          "ta"
+         ]
+        },
+        {
+         "k": "ち",
+         "r": "chi",
+         "alt": [
+          "chi",
+          "ti"
+         ]
+        },
+        {
+         "k": "つ",
+         "r": "tsu",
+         "alt": [
+          "tsu",
+          "tu"
+         ]
+        },
+        {
+         "k": "て",
+         "r": "te",
+         "alt": [
+          "te"
+         ]
+        },
+        {
+         "k": "と",
+         "r": "to",
+         "alt": [
+          "to"
+         ]
+        },
+        {
+         "k": "な",
+         "r": "na",
+         "alt": [
+          "na"
+         ]
+        },
+        {
+         "k": "に",
+         "r": "ni",
+         "alt": [
+          "ni"
+         ]
+        },
+        {
+         "k": "ぬ",
+         "r": "nu",
+         "alt": [
+          "nu"
+         ]
+        },
+        {
+         "k": "ね",
+         "r": "ne",
+         "alt": [
+          "ne"
+         ]
+        },
+        {
+         "k": "の",
+         "r": "no",
+         "alt": [
+          "no"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "いぬ",
+         "kana": "いぬ",
+         "r": "inu",
+         "it": "cane",
+         "role": "read"
+        },
+        {
+         "jp": "ねこ",
+         "kana": "ねこ",
+         "r": "neko",
+         "it": "gatto",
+         "role": "read"
+        },
+        {
+         "jp": "なつ",
+         "kana": "なつ",
+         "r": "natsu",
+         "it": "estate",
+         "role": "read"
+        },
+        {
+         "jp": "くち",
+         "kana": "くち",
+         "r": "kuchi",
+         "it": "bocca",
+         "role": "read"
+        },
+        {
+         "jp": "つくえ",
+         "kana": "つくえ",
+         "r": "tsukue",
+         "it": "scrivania",
+         "role": "read"
+        },
+        {
+         "jp": "そと",
+         "kana": "そと",
+         "r": "soto",
+         "it": "fuori",
+         "role": "read"
+        }
+       ]
+      },
+      {
+       "id": "h4",
+       "script": "Hiragana",
+       "title": "Righe H e M",
+       "glyph": "はま",
+       "goal": "Leggere le righe H e M e pronunciare correttamente ふ.",
+       "theory": [
+        "Riga H: <span class=\"jp\">は ひ ふ へ ほ</span>. La <b>h</b> è aspirata, come in inglese \"house\". <span class=\"jp\">ふ</span> si legge <b>fu</b>: un soffio tra le labbra, a metà tra f e h, senza toccare i denti.",
+        "Riga M: <span class=\"jp\">ま み む め も</span>, regolare.",
+        "Anticipazione: quando <span class=\"jp\">は</span> fa da particella grammaticale si legge <b>wa</b>, e quando <span class=\"jp\">へ</span> fa da particella si legge <b>e</b>. Lo studierai nel livello N5; per ora leggi ha e he."
+       ],
+       "kana": [
+        {
+         "k": "は",
+         "r": "ha",
+         "alt": [
+          "ha"
+         ]
+        },
+        {
+         "k": "ひ",
+         "r": "hi",
+         "alt": [
+          "hi"
+         ]
+        },
+        {
+         "k": "ふ",
+         "r": "fu",
+         "alt": [
+          "fu",
+          "hu"
+         ]
+        },
+        {
+         "k": "へ",
+         "r": "he",
+         "alt": [
+          "he"
+         ]
+        },
+        {
+         "k": "ほ",
+         "r": "ho",
+         "alt": [
+          "ho"
+         ]
+        },
+        {
+         "k": "ま",
+         "r": "ma",
+         "alt": [
+          "ma"
+         ]
+        },
+        {
+         "k": "み",
+         "r": "mi",
+         "alt": [
+          "mi"
+         ]
+        },
+        {
+         "k": "む",
+         "r": "mu",
+         "alt": [
+          "mu"
+         ]
+        },
+        {
+         "k": "め",
+         "r": "me",
+         "alt": [
+          "me"
+         ]
+        },
+        {
+         "k": "も",
+         "r": "mo",
+         "alt": [
+          "mo"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "はな",
+         "kana": "はな",
+         "r": "hana",
+         "it": "fiore",
+         "role": "read"
+        },
+        {
+         "jp": "ひと",
+         "kana": "ひと",
+         "r": "hito",
+         "it": "persona",
+         "role": "read"
+        },
+        {
+         "jp": "ふね",
+         "kana": "ふね",
+         "r": "fune",
+         "it": "nave",
+         "role": "read"
+        },
+        {
+         "jp": "みみ",
+         "kana": "みみ",
+         "r": "mimi",
+         "it": "orecchio",
+         "role": "read"
+        },
+        {
+         "jp": "ほし",
+         "kana": "ほし",
+         "r": "hoshi",
+         "it": "stella",
+         "role": "read"
+        },
+        {
+         "jp": "むし",
+         "kana": "むし",
+         "r": "mushi",
+         "it": "insetto",
+         "role": "read"
+        }
+       ]
+      },
+      {
+       "id": "h5",
+       "script": "Hiragana",
+       "title": "Righe Y, R, W e la ん",
+       "glyph": "やらわん",
+       "goal": "Completare i 46 hiragana di base.",
+       "theory": [
+        "Riga Y: solo tre segni, <span class=\"jp\">や ゆ よ</span> (ya yu yo).",
+        "Riga R: <span class=\"jp\">ら り る れ ろ</span>. La r giapponese è un solo colpo leggero della lingua sul palato, a metà tra la nostra r e la l. Non va mai arrotata.",
+        "Riga W: <span class=\"jp\">わ</span> (wa) e <span class=\"jp\">を</span>, che si pronuncia <b>o</b> e si usa quasi solo come particella dell'oggetto.",
+        "Infine <span class=\"jp\">ん</span>: l'unico suono consonantico che sta da solo, senza vocale. Si legge <b>n</b> e conta come una sillaba intera: <span class=\"jp\">ほん</span> ha due battute, ho-n. Con questa lezione conosci tutti i 46 hiragana di base."
+       ],
+       "kana": [
+        {
+         "k": "や",
+         "r": "ya",
+         "alt": [
+          "ya"
+         ]
+        },
+        {
+         "k": "ゆ",
+         "r": "yu",
+         "alt": [
+          "yu"
+         ]
+        },
+        {
+         "k": "よ",
+         "r": "yo",
+         "alt": [
+          "yo"
+         ]
+        },
+        {
+         "k": "ら",
+         "r": "ra",
+         "alt": [
+          "ra"
+         ]
+        },
+        {
+         "k": "り",
+         "r": "ri",
+         "alt": [
+          "ri"
+         ]
+        },
+        {
+         "k": "る",
+         "r": "ru",
+         "alt": [
+          "ru"
+         ]
+        },
+        {
+         "k": "れ",
+         "r": "re",
+         "alt": [
+          "re"
+         ]
+        },
+        {
+         "k": "ろ",
+         "r": "ro",
+         "alt": [
+          "ro"
+         ]
+        },
+        {
+         "k": "わ",
+         "r": "wa",
+         "alt": [
+          "wa"
+         ]
+        },
+        {
+         "k": "を",
+         "r": "wo",
+         "alt": [
+          "wo",
+          "o"
+         ]
+        },
+        {
+         "k": "ん",
+         "r": "n",
+         "alt": [
+          "n",
+          "nn"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "やま",
+         "kana": "やま",
+         "r": "yama",
+         "it": "montagna",
+         "role": "read"
+        },
+        {
+         "jp": "ゆき",
+         "kana": "ゆき",
+         "r": "yuki",
+         "it": "neve",
+         "role": "read"
+        },
+        {
+         "jp": "よる",
+         "kana": "よる",
+         "r": "yoru",
+         "it": "notte",
+         "role": "read"
+        },
+        {
+         "jp": "さくら",
+         "kana": "さくら",
+         "r": "sakura",
+         "it": "ciliegio in fiore",
+         "role": "read"
+        },
+        {
+         "jp": "わたし",
+         "kana": "わたし",
+         "r": "watashi",
+         "it": "io",
+         "role": "read"
+        },
+        {
+         "jp": "ほん",
+         "kana": "ほん",
+         "r": "hon",
+         "it": "libro",
+         "role": "read"
+        }
+       ]
+      },
+      {
+       "id": "h6",
+       "script": "Hiragana",
+       "title": "Dakuten e handakuten",
+       "glyph": "がぱ",
+       "goal": "Leggere le sillabe sonore (g, z, d, b) e quelle con p.",
+       "theory": [
+        "Due piccoli segni cambiano il suono di una sillaba. Il <b>dakuten</b> (゛, due trattini in alto a destra) rende sonora la consonante: k→<b>g</b>, s→<b>z</b>, t→<b>d</b>, h→<b>b</b>. La g è sempre dura, come in \"gatto\".",
+        "L'<b>handakuten</b> (゜, un cerchietto) si usa solo sulla riga H e la trasforma in <b>p</b>: <span class=\"jp\">は→ぱ</span>.",
+        "Irregolari: <span class=\"jp\">じ</span> si legge <b>ji</b> (come \"gi\" di \"giro\"). <span class=\"jp\">ぢ</span> e <span class=\"jp\">づ</span> suonano come <span class=\"jp\">じ</span> e <span class=\"jp\">ず</span> e compaiono raramente: per ora basta riconoscerli."
+       ],
+       "kana": [
+        {
+         "k": "が",
+         "r": "ga",
+         "alt": [
+          "ga"
+         ]
+        },
+        {
+         "k": "ぎ",
+         "r": "gi",
+         "alt": [
+          "gi"
+         ]
+        },
+        {
+         "k": "ぐ",
+         "r": "gu",
+         "alt": [
+          "gu"
+         ]
+        },
+        {
+         "k": "げ",
+         "r": "ge",
+         "alt": [
+          "ge"
+         ]
+        },
+        {
+         "k": "ご",
+         "r": "go",
+         "alt": [
+          "go"
+         ]
+        },
+        {
+         "k": "ざ",
+         "r": "za",
+         "alt": [
+          "za"
+         ]
+        },
+        {
+         "k": "じ",
+         "r": "ji",
+         "alt": [
+          "ji",
+          "zi"
+         ]
+        },
+        {
+         "k": "ず",
+         "r": "zu",
+         "alt": [
+          "zu"
+         ]
+        },
+        {
+         "k": "ぜ",
+         "r": "ze",
+         "alt": [
+          "ze"
+         ]
+        },
+        {
+         "k": "ぞ",
+         "r": "zo",
+         "alt": [
+          "zo"
+         ]
+        },
+        {
+         "k": "だ",
+         "r": "da",
+         "alt": [
+          "da"
+         ]
+        },
+        {
+         "k": "で",
+         "r": "de",
+         "alt": [
+          "de"
+         ]
+        },
+        {
+         "k": "ど",
+         "r": "do",
+         "alt": [
+          "do"
+         ]
+        },
+        {
+         "k": "ば",
+         "r": "ba",
+         "alt": [
+          "ba"
+         ]
+        },
+        {
+         "k": "び",
+         "r": "bi",
+         "alt": [
+          "bi"
+         ]
+        },
+        {
+         "k": "ぶ",
+         "r": "bu",
+         "alt": [
+          "bu"
+         ]
+        },
+        {
+         "k": "べ",
+         "r": "be",
+         "alt": [
+          "be"
+         ]
+        },
+        {
+         "k": "ぼ",
+         "r": "bo",
+         "alt": [
+          "bo"
+         ]
+        },
+        {
+         "k": "ぱ",
+         "r": "pa",
+         "alt": [
+          "pa"
+         ]
+        },
+        {
+         "k": "ぴ",
+         "r": "pi",
+         "alt": [
+          "pi"
+         ]
+        },
+        {
+         "k": "ぷ",
+         "r": "pu",
+         "alt": [
+          "pu"
+         ]
+        },
+        {
+         "k": "ぺ",
+         "r": "pe",
+         "alt": [
+          "pe"
+         ]
+        },
+        {
+         "k": "ぽ",
+         "r": "po",
+         "alt": [
+          "po"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "かぎ",
+         "kana": "かぎ",
+         "r": "kagi",
+         "it": "chiave",
+         "role": "read"
+        },
+        {
+         "jp": "ごはん",
+         "kana": "ごはん",
+         "r": "gohan",
+         "it": "riso cotto, pasto",
+         "role": "read"
+        },
+        {
+         "jp": "ぶた",
+         "kana": "ぶた",
+         "r": "buta",
+         "it": "maiale",
+         "role": "read"
+        },
+        {
+         "jp": "でんわ",
+         "kana": "でんわ",
+         "r": "denwa",
+         "it": "telefono",
+         "role": "read"
+        },
+        {
+         "jp": "えんぴつ",
+         "kana": "えんぴつ",
+         "r": "enpitsu",
+         "it": "matita",
+         "role": "read"
+        },
+        {
+         "jp": "ひざ",
+         "kana": "ひざ",
+         "r": "hiza",
+         "it": "ginocchio",
+         "role": "read"
+        }
+       ]
+      },
+      {
+       "id": "h7",
+       "script": "Hiragana",
+       "title": "Sillabe composte, っ e vocali lunghe",
+       "glyph": "きゃっ",
+       "goal": "Leggere sillabe composte, consonanti doppie e vocali lunghe.",
+       "theory": [
+        "Una sillaba della colonna <b>i</b> seguita da una <b>ゃ ゅ ょ piccola</b> forma un solo suono: <span class=\"jp\">き+ゃ = きゃ</span> (kya), <span class=\"jp\">し+ょ = しょ</span> (sho), <span class=\"jp\">ち+ゅ = ちゅ</span> (chu). La piccola si scrive più in basso e più stretta. Confronta <span class=\"jp\">きよ</span> (ki-yo, due sillabe) e <span class=\"jp\">きょ</span> (kyo, una sillaba).",
+        "La <b>っ piccola</b> non si pronuncia: blocca il fiato per una battuta e raddoppia la consonante che segue, come nelle nostre doppie. <span class=\"jp\">きって</span> = ki<b>tt</b>e.",
+        "Vocali lunghe: in hiragana si allungano aggiungendo una vocale. <span class=\"jp\">おう</span> e <span class=\"jp\">おお</span> si leggono ō, <span class=\"jp\">えい</span> di solito ē, <span class=\"jp\">うう</span> ū. La lunghezza distingue parole diverse (<span class=\"jp\">おばさん</span> zia, <span class=\"jp\">おばあさん</span> nonna), quindi va rispettata. Nelle risposte scritte puoi indicarla raddoppiando la vocale: gakkou o gakkoo."
+       ],
+       "kana": [
+        {
+         "k": "きゃ",
+         "r": "kya",
+         "alt": [
+          "kya"
+         ]
+        },
+        {
+         "k": "きゅ",
+         "r": "kyu",
+         "alt": [
+          "kyu"
+         ]
+        },
+        {
+         "k": "きょ",
+         "r": "kyo",
+         "alt": [
+          "kyo"
+         ]
+        },
+        {
+         "k": "しゃ",
+         "r": "sha",
+         "alt": [
+          "sha",
+          "sya"
+         ]
+        },
+        {
+         "k": "しゅ",
+         "r": "shu",
+         "alt": [
+          "shu",
+          "syu"
+         ]
+        },
+        {
+         "k": "しょ",
+         "r": "sho",
+         "alt": [
+          "sho",
+          "syo"
+         ]
+        },
+        {
+         "k": "ちゃ",
+         "r": "cha",
+         "alt": [
+          "cha",
+          "tya"
+         ]
+        },
+        {
+         "k": "ちゅ",
+         "r": "chu",
+         "alt": [
+          "chu",
+          "tyu"
+         ]
+        },
+        {
+         "k": "ちょ",
+         "r": "cho",
+         "alt": [
+          "cho",
+          "tyo"
+         ]
+        },
+        {
+         "k": "にゃ",
+         "r": "nya",
+         "alt": [
+          "nya"
+         ]
+        },
+        {
+         "k": "りょ",
+         "r": "ryo",
+         "alt": [
+          "ryo"
+         ]
+        },
+        {
+         "k": "じゃ",
+         "r": "ja",
+         "alt": [
+          "ja",
+          "zya"
+         ]
+        },
+        {
+         "k": "ぎょ",
+         "r": "gyo",
+         "alt": [
+          "gyo"
+         ]
+        },
+        {
+         "k": "びょ",
+         "r": "byo",
+         "alt": [
+          "byo"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "きって",
+         "kana": "きって",
+         "r": "kitte",
+         "it": "francobollo",
+         "role": "read"
+        },
+        {
+         "jp": "おちゃ",
+         "kana": "おちゃ",
+         "r": "ocha",
+         "it": "tè",
+         "role": "read"
+        },
+        {
+         "jp": "しゃしん",
+         "kana": "しゃしん",
+         "r": "shashin",
+         "it": "fotografia",
+         "role": "read"
+        },
+        {
+         "jp": "がっこう",
+         "kana": "がっこう",
+         "r": "gakkō",
+         "it": "scuola",
+         "role": "read"
+        },
+        {
+         "jp": "きょう",
+         "kana": "きょう",
+         "r": "kyō",
+         "it": "oggi",
+         "role": "read"
+        },
+        {
+         "jp": "いっしょ",
+         "kana": "いっしょ",
+         "r": "issho",
+         "it": "insieme",
+         "role": "read"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "L0-kata",
+     "title": "Katakana",
+     "lessons": [
+      {
+       "id": "k1",
+       "script": "Katakana",
+       "title": "Vocali, K e S",
+       "glyph": "アカサ",
+       "goal": "Riconoscere le prime righe katakana e distinguere シ da ツ.",
+       "theory": [
+        "I <b>katakana</b> hanno esattamente gli stessi suoni degli hiragana, ma forme più spigolose. Si usano per le parole di origine straniera, i nomi stranieri, le onomatopee e per dare enfasi, un po' come il nostro corsivo.",
+        "Il tuo nome, per esempio, si scriverà in katakana. Italia è <span class=\"jp\">イタリア</span>.",
+        "Prima coppia insidiosa: <span class=\"jp\">シ</span> (shi) e <span class=\"jp\">ツ</span> (tsu). In シ i due trattini sono quasi orizzontali e il tratto lungo sale dal basso a sinistra verso destra; in ツ i trattini sono verticali e il tratto lungo scende dall'alto a destra."
+       ],
+       "kana": [
+        {
+         "k": "ア",
+         "r": "a",
+         "alt": [
+          "a"
+         ]
+        },
+        {
+         "k": "イ",
+         "r": "i",
+         "alt": [
+          "i"
+         ]
+        },
+        {
+         "k": "ウ",
+         "r": "u",
+         "alt": [
+          "u"
+         ]
+        },
+        {
+         "k": "エ",
+         "r": "e",
+         "alt": [
+          "e"
+         ]
+        },
+        {
+         "k": "オ",
+         "r": "o",
+         "alt": [
+          "o"
+         ]
+        },
+        {
+         "k": "カ",
+         "r": "ka",
+         "alt": [
+          "ka"
+         ]
+        },
+        {
+         "k": "キ",
+         "r": "ki",
+         "alt": [
+          "ki"
+         ]
+        },
+        {
+         "k": "ク",
+         "r": "ku",
+         "alt": [
+          "ku"
+         ]
+        },
+        {
+         "k": "ケ",
+         "r": "ke",
+         "alt": [
+          "ke"
+         ]
+        },
+        {
+         "k": "コ",
+         "r": "ko",
+         "alt": [
+          "ko"
+         ]
+        },
+        {
+         "k": "サ",
+         "r": "sa",
+         "alt": [
+          "sa"
+         ]
+        },
+        {
+         "k": "シ",
+         "r": "shi",
+         "alt": [
+          "shi",
+          "si"
+         ]
+        },
+        {
+         "k": "ス",
+         "r": "su",
+         "alt": [
+          "su"
+         ]
+        },
+        {
+         "k": "セ",
+         "r": "se",
+         "alt": [
+          "se"
+         ]
+        },
+        {
+         "k": "ソ",
+         "r": "so",
+         "alt": [
+          "so"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "アイス",
+         "kana": "アイス",
+         "r": "aisu",
+         "it": "gelato",
+         "role": "read"
+        },
+        {
+         "jp": "ココア",
+         "kana": "ココア",
+         "r": "kokoa",
+         "it": "cioccolata calda",
+         "role": "read"
+        },
+        {
+         "jp": "スイス",
+         "kana": "スイス",
+         "r": "suisu",
+         "it": "Svizzera",
+         "role": "read"
+        },
+        {
+         "jp": "キウイ",
+         "kana": "キウイ",
+         "r": "kiui",
+         "it": "kiwi",
+         "role": "read"
+        }
+       ]
+      },
+      {
+       "id": "k2",
+       "script": "Katakana",
+       "title": "T, N e H",
+       "glyph": "タナハ",
+       "goal": "Leggere le righe T, N, H in katakana e le prime parole straniere.",
+       "theory": [
+        "Stesse letture della tabella hiragana: <span class=\"jp\">タ チ ツ テ ト</span>, <span class=\"jp\">ナ ニ ヌ ネ ノ</span>, <span class=\"jp\">ハ ヒ フ ヘ ホ</span>.",
+        "<span class=\"jp\">ヘ</span> katakana e <span class=\"jp\">へ</span> hiragana sono praticamente identici. <span class=\"jp\">ニ</span> assomiglia al kanji del numero due (二): il contesto li distingue.",
+        "Le parole straniere si adattano ai suoni giapponesi aggiungendo vocali dopo le consonanti isolate: \"tennis\" diventa <span class=\"jp\">テニス</span> (te-ni-su), \"text\" <span class=\"jp\">テキスト</span> (te-ki-su-to)."
+       ],
+       "kana": [
+        {
+         "k": "タ",
+         "r": "ta",
+         "alt": [
+          "ta"
+         ]
+        },
+        {
+         "k": "チ",
+         "r": "chi",
+         "alt": [
+          "chi",
+          "ti"
+         ]
+        },
+        {
+         "k": "ツ",
+         "r": "tsu",
+         "alt": [
+          "tsu",
+          "tu"
+         ]
+        },
+        {
+         "k": "テ",
+         "r": "te",
+         "alt": [
+          "te"
+         ]
+        },
+        {
+         "k": "ト",
+         "r": "to",
+         "alt": [
+          "to"
+         ]
+        },
+        {
+         "k": "ナ",
+         "r": "na",
+         "alt": [
+          "na"
+         ]
+        },
+        {
+         "k": "ニ",
+         "r": "ni",
+         "alt": [
+          "ni"
+         ]
+        },
+        {
+         "k": "ヌ",
+         "r": "nu",
+         "alt": [
+          "nu"
+         ]
+        },
+        {
+         "k": "ネ",
+         "r": "ne",
+         "alt": [
+          "ne"
+         ]
+        },
+        {
+         "k": "ノ",
+         "r": "no",
+         "alt": [
+          "no"
+         ]
+        },
+        {
+         "k": "ハ",
+         "r": "ha",
+         "alt": [
+          "ha"
+         ]
+        },
+        {
+         "k": "ヒ",
+         "r": "hi",
+         "alt": [
+          "hi"
+         ]
+        },
+        {
+         "k": "フ",
+         "r": "fu",
+         "alt": [
+          "fu",
+          "hu"
+         ]
+        },
+        {
+         "k": "ヘ",
+         "r": "he",
+         "alt": [
+          "he"
+         ]
+        },
+        {
+         "k": "ホ",
+         "r": "ho",
+         "alt": [
+          "ho"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "テニス",
+         "kana": "テニス",
+         "r": "tenisu",
+         "it": "tennis",
+         "role": "read"
+        },
+        {
+         "jp": "ネクタイ",
+         "kana": "ネクタイ",
+         "r": "nekutai",
+         "it": "cravatta",
+         "role": "read"
+        },
+        {
+         "jp": "ナイフ",
+         "kana": "ナイフ",
+         "r": "naifu",
+         "it": "coltello",
+         "role": "read"
+        },
+        {
+         "jp": "テキスト",
+         "kana": "テキスト",
+         "r": "tekisuto",
+         "it": "libro di testo",
+         "role": "read"
+        }
+       ]
+      },
+      {
+       "id": "k3",
+       "script": "Katakana",
+       "title": "M, Y, R, W e ン",
+       "glyph": "マヤラン",
+       "goal": "Completare i katakana di base e distinguere ソ da ン.",
+       "theory": [
+        "Ultime righe: <span class=\"jp\">マ ミ ム メ モ</span>, <span class=\"jp\">ヤ ユ ヨ</span>, <span class=\"jp\">ラ リ ル レ ロ</span>, <span class=\"jp\">ワ ン</span>. La <span class=\"jp\">ヲ</span> katakana esiste ma non si usa quasi mai.",
+        "Seconda coppia insidiosa: <span class=\"jp\">ソ</span> (so) e <span class=\"jp\">ン</span> (n). In ソ il trattino corto è quasi verticale e il tratto lungo scende dall'alto; in ン il trattino è quasi orizzontale e il tratto lungo sale dal basso.",
+        "Con queste righe puoi già leggere <span class=\"jp\">イタリア</span>, <span class=\"jp\">カメラ</span> e <span class=\"jp\">トマト</span>."
+       ],
+       "kana": [
+        {
+         "k": "マ",
+         "r": "ma",
+         "alt": [
+          "ma"
+         ]
+        },
+        {
+         "k": "ミ",
+         "r": "mi",
+         "alt": [
+          "mi"
+         ]
+        },
+        {
+         "k": "ム",
+         "r": "mu",
+         "alt": [
+          "mu"
+         ]
+        },
+        {
+         "k": "メ",
+         "r": "me",
+         "alt": [
+          "me"
+         ]
+        },
+        {
+         "k": "モ",
+         "r": "mo",
+         "alt": [
+          "mo"
+         ]
+        },
+        {
+         "k": "ヤ",
+         "r": "ya",
+         "alt": [
+          "ya"
+         ]
+        },
+        {
+         "k": "ユ",
+         "r": "yu",
+         "alt": [
+          "yu"
+         ]
+        },
+        {
+         "k": "ヨ",
+         "r": "yo",
+         "alt": [
+          "yo"
+         ]
+        },
+        {
+         "k": "ラ",
+         "r": "ra",
+         "alt": [
+          "ra"
+         ]
+        },
+        {
+         "k": "リ",
+         "r": "ri",
+         "alt": [
+          "ri"
+         ]
+        },
+        {
+         "k": "ル",
+         "r": "ru",
+         "alt": [
+          "ru"
+         ]
+        },
+        {
+         "k": "レ",
+         "r": "re",
+         "alt": [
+          "re"
+         ]
+        },
+        {
+         "k": "ロ",
+         "r": "ro",
+         "alt": [
+          "ro"
+         ]
+        },
+        {
+         "k": "ワ",
+         "r": "wa",
+         "alt": [
+          "wa"
+         ]
+        },
+        {
+         "k": "ン",
+         "r": "n",
+         "alt": [
+          "n",
+          "nn"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "イタリア",
+         "kana": "イタリア",
+         "r": "itaria",
+         "it": "Italia",
+         "role": "read"
+        },
+        {
+         "jp": "カメラ",
+         "kana": "カメラ",
+         "r": "kamera",
+         "it": "fotocamera",
+         "role": "read"
+        },
+        {
+         "jp": "トマト",
+         "kana": "トマト",
+         "r": "tomato",
+         "it": "pomodoro",
+         "role": "read"
+        },
+        {
+         "jp": "ホテル",
+         "kana": "ホテル",
+         "r": "hoteru",
+         "it": "hotel",
+         "role": "read"
+        },
+        {
+         "jp": "メロン",
+         "kana": "メロン",
+         "r": "meron",
+         "it": "melone",
+         "role": "read"
+        },
+        {
+         "jp": "ミルク",
+         "kana": "ミルク",
+         "r": "miruku",
+         "it": "latte",
+         "role": "read"
+        }
+       ]
+      },
+      {
+       "id": "k4",
+       "script": "Katakana",
+       "title": "Suoni sonori e trattino lungo",
+       "glyph": "ガパー",
+       "goal": "Leggere le sillabe sonore in katakana e le vocali lunghe con ー.",
+       "theory": [
+        "Dakuten e handakuten funzionano come negli hiragana: <span class=\"jp\">カ→ガ</span>, <span class=\"jp\">サ→ザ</span>, <span class=\"jp\">タ→ダ</span>, <span class=\"jp\">ハ→バ→パ</span>.",
+        "Nei katakana le vocali lunghe si scrivono con un trattino: <b>ー</b>. <span class=\"jp\">コーヒー</span> = kōhī, caffè. Nella scrittura verticale il trattino diventa verticale. Quando scrivi in lettere latine, il trattino si indica con \"-\": ko-hi-.",
+        "Con questa lezione hai completato entrambi gli alfabeti. Da qui in poi si studia la lingua vera e propria."
+       ],
+       "kana": [
+        {
+         "k": "ガ",
+         "r": "ga",
+         "alt": [
+          "ga"
+         ]
+        },
+        {
+         "k": "ギ",
+         "r": "gi",
+         "alt": [
+          "gi"
+         ]
+        },
+        {
+         "k": "グ",
+         "r": "gu",
+         "alt": [
+          "gu"
+         ]
+        },
+        {
+         "k": "ゲ",
+         "r": "ge",
+         "alt": [
+          "ge"
+         ]
+        },
+        {
+         "k": "ゴ",
+         "r": "go",
+         "alt": [
+          "go"
+         ]
+        },
+        {
+         "k": "ザ",
+         "r": "za",
+         "alt": [
+          "za"
+         ]
+        },
+        {
+         "k": "ジ",
+         "r": "ji",
+         "alt": [
+          "ji",
+          "zi"
+         ]
+        },
+        {
+         "k": "ズ",
+         "r": "zu",
+         "alt": [
+          "zu"
+         ]
+        },
+        {
+         "k": "ゼ",
+         "r": "ze",
+         "alt": [
+          "ze"
+         ]
+        },
+        {
+         "k": "ゾ",
+         "r": "zo",
+         "alt": [
+          "zo"
+         ]
+        },
+        {
+         "k": "ダ",
+         "r": "da",
+         "alt": [
+          "da"
+         ]
+        },
+        {
+         "k": "デ",
+         "r": "de",
+         "alt": [
+          "de"
+         ]
+        },
+        {
+         "k": "ド",
+         "r": "do",
+         "alt": [
+          "do"
+         ]
+        },
+        {
+         "k": "バ",
+         "r": "ba",
+         "alt": [
+          "ba"
+         ]
+        },
+        {
+         "k": "ビ",
+         "r": "bi",
+         "alt": [
+          "bi"
+         ]
+        },
+        {
+         "k": "ブ",
+         "r": "bu",
+         "alt": [
+          "bu"
+         ]
+        },
+        {
+         "k": "ベ",
+         "r": "be",
+         "alt": [
+          "be"
+         ]
+        },
+        {
+         "k": "ボ",
+         "r": "bo",
+         "alt": [
+          "bo"
+         ]
+        },
+        {
+         "k": "パ",
+         "r": "pa",
+         "alt": [
+          "pa"
+         ]
+        },
+        {
+         "k": "ピ",
+         "r": "pi",
+         "alt": [
+          "pi"
+         ]
+        },
+        {
+         "k": "プ",
+         "r": "pu",
+         "alt": [
+          "pu"
+         ]
+        },
+        {
+         "k": "ペ",
+         "r": "pe",
+         "alt": [
+          "pe"
+         ]
+        },
+        {
+         "k": "ポ",
+         "r": "po",
+         "alt": [
+          "po"
+         ]
+        }
+       ],
+       "words": [
+        {
+         "jp": "コーヒー",
+         "kana": "コーヒー",
+         "r": "kōhī",
+         "it": "caffè",
+         "role": "read"
+        },
+        {
+         "jp": "ケーキ",
+         "kana": "ケーキ",
+         "r": "kēki",
+         "it": "torta",
+         "role": "read"
+        },
+        {
+         "jp": "テレビ",
+         "kana": "テレビ",
+         "r": "terebi",
+         "it": "televisione",
+         "role": "read"
+        },
+        {
+         "jp": "パン",
+         "kana": "パン",
+         "r": "pan",
+         "it": "pane",
+         "role": "read"
+        },
+        {
+         "jp": "ピザ",
+         "kana": "ピザ",
+         "r": "piza",
+         "it": "pizza",
+         "role": "read"
+        },
+        {
+         "jp": "ローマ",
+         "kana": "ローマ",
+         "r": "rōma",
+         "it": "Roma",
+         "role": "read"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "N5",
+   "code": "JLPT N5",
+   "title": "Le fondamenta della lingua",
+   "desc": "Il primo livello della certificazione ufficiale. Struttura della frase, particelle, verbi, aggettivi e i primi kanji. In questa versione il livello è parziale: verrà completato fino al programma d'esame.",
+   "exam": {
+    "n": 30,
+    "pass": 0.8,
+    "provisional": true
+   },
+   "chapters": [
+    {
+     "id": "N5-c1",
+     "title": "Presentarsi e indicare",
+     "lessons": [
+      {
+       "id": "n5-1",
+       "title": "La frase nominale: は e です",
+       "glyph": "は・です",
+       "goal": "Dire chi sei e che cosa è qualcosa, in forma affermativa, negativa e interrogativa.",
+       "theory": [
+        "Principio fondamentale: in giapponese <b>il verbo sta sempre alla fine</b>. L'ordine è soggetto, oggetto, verbo (SOV), non soggetto, verbo, oggetto come in italiano.",
+        "La frase più semplice è <b>A は B です</b>: \"A è B\". <span class=\"jp\">は</span> marca il <b>tema</b> della frase, cioè ciò di cui si parla, e qui si legge <b>wa</b>. <span class=\"jp\">です</span> (desu) chiude la frase in modo cortese, come il nostro \"è\".",
+        "Per negare, <span class=\"jp\">です</span> diventa <b><span class=\"jp\">じゃありません</span></b> (ja arimasen); nello scritto più formale <span class=\"jp\">ではありません</span>. Per fare una domanda basta aggiungere <b><span class=\"jp\">か</span></b> alla fine, senza cambiare l'ordine delle parole. Si risponde con <span class=\"jp\">はい</span> (sì) o <span class=\"jp\">いいえ</span> (no).",
+        "Non esistono articoli né plurale: <span class=\"jp\">がくせい</span> vuol dire \"studente\", \"uno studente\", \"lo studente\" o \"studenti\" a seconda del contesto. Dopo il nome di un'altra persona si aggiunge <span class=\"jp\">さん</span>, mai dopo il proprio."
+       ],
+       "grammar": [
+        {
+         "id": "wa-desu",
+         "title": "A は B です",
+         "it": "A è B (frase nominale cortese)"
+        },
+        {
+         "id": "ja-arimasen",
+         "title": "A は B じゃありません",
+         "it": "A non è B"
+        },
+        {
+         "id": "ka",
+         "title": "〜か",
+         "it": "domanda: si aggiunge か alla fine"
+        }
+       ],
+       "words": [
+        {
+         "jp": "わたし",
+         "kana": "わたし",
+         "r": "watashi",
+         "it": "io",
+         "role": "lang"
+        },
+        {
+         "jp": "がくせい",
+         "kana": "がくせい",
+         "r": "gakusei",
+         "it": "studente",
+         "role": "lang"
+        },
+        {
+         "jp": "せんせい",
+         "kana": "せんせい",
+         "r": "sensei",
+         "it": "insegnante",
+         "role": "lang"
+        },
+        {
+         "jp": "かいしゃいん",
+         "kana": "かいしゃいん",
+         "r": "kaishain",
+         "it": "impiegato",
+         "role": "lang"
+        },
+        {
+         "jp": "いしゃ",
+         "kana": "いしゃ",
+         "r": "isha",
+         "it": "medico",
+         "role": "lang"
+        },
+        {
+         "jp": "イタリアじん",
+         "kana": "イタリアじん",
+         "r": "itariajin",
+         "it": "italiano (persona)",
+         "role": "lang"
+        },
+        {
+         "jp": "にほんじん",
+         "kana": "にほんじん",
+         "r": "nihonjin",
+         "it": "giapponese (persona)",
+         "role": "lang"
+        },
+        {
+         "jp": "ともだち",
+         "kana": "ともだち",
+         "r": "tomodachi",
+         "it": "amico",
+         "role": "lang"
+        },
+        {
+         "jp": "はい",
+         "kana": "はい",
+         "r": "hai",
+         "it": "sì",
+         "role": "lang"
+        },
+        {
+         "jp": "いいえ",
+         "kana": "いいえ",
+         "r": "iie",
+         "it": "no",
+         "role": "lang"
+        }
+       ],
+       "sentences": [
+        {
+         "jp": "わたしは がくせいです。",
+         "r": "watashi wa gakusei desu.",
+         "it": "Io sono uno studente.",
+         "tokens": [
+          "わたし",
+          "は",
+          "がくせい",
+          "です"
+         ],
+         "gp": "wa-desu",
+         "gap": {
+          "q": "わたし ＿ がくせいです。",
+          "a": "は",
+          "o": [
+           "は",
+           "を",
+           "に",
+           "の"
+          ],
+          "ex": "は marca il tema della frase e qui si legge \"wa\"."
+         }
+        },
+        {
+         "jp": "せんせいは にほんじんです。",
+         "r": "sensei wa nihonjin desu.",
+         "it": "L'insegnante è giapponese.",
+         "tokens": [
+          "せんせい",
+          "は",
+          "にほんじん",
+          "です"
+         ],
+         "gp": "wa-desu"
+        },
+        {
+         "jp": "マリオさんは イタリアじんです。",
+         "r": "Mario-san wa itariajin desu.",
+         "it": "Mario è italiano.",
+         "tokens": [
+          "マリオさん",
+          "は",
+          "イタリアじん",
+          "です"
+         ],
+         "gp": "wa-desu"
+        },
+        {
+         "jp": "たなかさんは いしゃですか。",
+         "r": "Tanaka-san wa isha desu ka.",
+         "it": "Il signor Tanaka è medico?",
+         "tokens": [
+          "たなかさん",
+          "は",
+          "いしゃ",
+          "です",
+          "か"
+         ],
+         "gp": "ka",
+         "gap": {
+          "q": "たなかさんは いしゃです ＿。",
+          "a": "か",
+          "o": [
+           "か",
+           "は",
+           "の",
+           "を"
+          ],
+          "ex": "か alla fine della frase la trasforma in domanda."
+         }
+        },
+        {
+         "jp": "いいえ、いしゃじゃありません。",
+         "r": "iie, isha ja arimasen.",
+         "it": "No, non è medico.",
+         "tokens": [
+          "いいえ",
+          "いしゃ",
+          "じゃありません"
+         ],
+         "gp": "ja-arimasen"
+        },
+        {
+         "jp": "わたしは かいしゃいんじゃありません。",
+         "r": "watashi wa kaishain ja arimasen.",
+         "it": "Io non sono un impiegato.",
+         "tokens": [
+          "わたし",
+          "は",
+          "かいしゃいん",
+          "じゃありません"
+         ],
+         "gp": "ja-arimasen",
+         "gap": {
+          "q": "わたしは かいしゃいん ＿。",
+          "a": "じゃありません",
+          "o": [
+           "じゃありません",
+           "です",
+           "ですか",
+           "の"
+          ],
+          "ex": "La frase è negativa: です diventa じゃありません."
+         }
+        }
+       ],
+       "drills": [
+        {
+         "gp": "ja-arimasen",
+         "prompt": "Qual è la forma negativa di です?",
+         "options": [
+          "じゃありません",
+          "ですか",
+          "でした",
+          "ません"
+         ],
+         "answer": "じゃありません",
+         "jp": true
+        },
+        {
+         "gp": "wa-desu",
+         "prompt": "Come si legge は quando marca il tema?",
+         "options": [
+          "wa",
+          "ha",
+          "ba",
+          "e"
+         ],
+         "answer": "wa"
+        },
+        {
+         "gp": "wa-desu",
+         "prompt": "Dove va il verbo in una frase giapponese?",
+         "options": [
+          "Alla fine",
+          "All'inizio",
+          "Dopo il soggetto",
+          "In qualsiasi posizione"
+         ],
+         "answer": "Alla fine"
+        },
+        {
+         "gp": "ka",
+         "prompt": "Come trasformi がくせいです in una domanda?",
+         "options": [
+          "がくせいですか",
+          "かがくせいです",
+          "がくせいか です",
+          "がくせいでか"
+         ],
+         "answer": "がくせいですか",
+         "jp": true
+        }
+       ]
+      },
+      {
+       "id": "n5-2",
+       "title": "Possesso e dimostrativi: の, これ, それ, あれ",
+       "glyph": "の・これ",
+       "goal": "Indicare oggetti vicini e lontani e dire a chi appartengono.",
+       "theory": [
+        "La particella <b><span class=\"jp\">の</span></b> lega due nomi: il primo possiede o specifica il secondo. <span class=\"jp\">わたしの ほん</span> = il mio libro. <span class=\"jp\">せんせいの かさ</span> = l'ombrello dell'insegnante. L'ordine è l'opposto dell'italiano: prima il possessore, poi la cosa posseduta.",
+        "I dimostrativi seguono una serie ordinata, detta <b>ko-so-a-do</b>: <span class=\"jp\">これ</span> (questo, vicino a chi parla), <span class=\"jp\">それ</span> (codesto, vicino a chi ascolta), <span class=\"jp\">あれ</span> (quello, lontano da entrambi), <span class=\"jp\">どれ</span> (quale?). La stessa serie tornerà per luoghi e direzioni.",
+        "Per chiedere \"cosa?\" si usa <span class=\"jp\">なん</span>, per \"di chi?\" <span class=\"jp\">だれの</span>. La struttura resta quella della lezione precedente: A は B ですか。"
+       ],
+       "grammar": [
+        {
+         "id": "no",
+         "title": "N1 の N2",
+         "it": "N2 di N1: possesso e specificazione"
+        },
+        {
+         "id": "kosoa",
+         "title": "これ・それ・あれ・どれ",
+         "it": "dimostrativi secondo la distanza"
+        }
+       ],
+       "words": [
+        {
+         "jp": "これ",
+         "kana": "これ",
+         "r": "kore",
+         "it": "questo (vicino a me)",
+         "role": "lang"
+        },
+        {
+         "jp": "それ",
+         "kana": "それ",
+         "r": "sore",
+         "it": "codesto (vicino a te)",
+         "role": "lang"
+        },
+        {
+         "jp": "あれ",
+         "kana": "あれ",
+         "r": "are",
+         "it": "quello (lontano da entrambi)",
+         "role": "lang"
+        },
+        {
+         "jp": "ほん",
+         "kana": "ほん",
+         "r": "hon",
+         "it": "libro",
+         "role": "lang"
+        },
+        {
+         "jp": "かばん",
+         "kana": "かばん",
+         "r": "kaban",
+         "it": "borsa",
+         "role": "lang"
+        },
+        {
+         "jp": "とけい",
+         "kana": "とけい",
+         "r": "tokei",
+         "it": "orologio",
+         "role": "lang"
+        },
+        {
+         "jp": "かさ",
+         "kana": "かさ",
+         "r": "kasa",
+         "it": "ombrello",
+         "role": "lang"
+        },
+        {
+         "jp": "くるま",
+         "kana": "くるま",
+         "r": "kuruma",
+         "it": "automobile",
+         "role": "lang"
+        },
+        {
+         "jp": "だれ",
+         "kana": "だれ",
+         "r": "dare",
+         "it": "chi",
+         "role": "lang"
+        },
+        {
+         "jp": "なん",
+         "kana": "なん",
+         "r": "nan",
+         "it": "cosa",
+         "role": "lang"
+        }
+       ],
+       "sentences": [
+        {
+         "jp": "これは ほんです。",
+         "r": "kore wa hon desu.",
+         "it": "Questo è un libro.",
+         "tokens": [
+          "これ",
+          "は",
+          "ほん",
+          "です"
+         ],
+         "gp": "kosoa"
+        },
+        {
+         "jp": "それは わたしの かばんです。",
+         "r": "sore wa watashi no kaban desu.",
+         "it": "Quella è la mia borsa.",
+         "tokens": [
+          "それ",
+          "は",
+          "わたし",
+          "の",
+          "かばん",
+          "です"
+         ],
+         "gp": "no",
+         "gap": {
+          "q": "それは わたし ＿ かばんです。",
+          "a": "の",
+          "o": [
+           "の",
+           "は",
+           "を",
+           "か"
+          ],
+          "ex": "の lega possessore e cosa posseduta: わたしの = mio."
+         }
+        },
+        {
+         "jp": "あれは だれの くるまですか。",
+         "r": "are wa dare no kuruma desu ka.",
+         "it": "Di chi è quella macchina laggiù?",
+         "tokens": [
+          "あれ",
+          "は",
+          "だれ",
+          "の",
+          "くるま",
+          "です",
+          "か"
+         ],
+         "gp": "no"
+        },
+        {
+         "jp": "これは なんですか。",
+         "r": "kore wa nan desu ka.",
+         "it": "Che cos'è questo?",
+         "tokens": [
+          "これ",
+          "は",
+          "なん",
+          "です",
+          "か"
+         ],
+         "gp": "kosoa",
+         "gap": {
+          "q": "＿ は なんですか。",
+          "a": "これ",
+          "o": [
+           "これ",
+           "それ",
+           "あれ",
+           "どれ"
+          ],
+          "ex": "L'oggetto è vicino a chi parla: これ."
+         }
+        },
+        {
+         "jp": "せんせいの とけいです。",
+         "r": "sensei no tokei desu.",
+         "it": "È l'orologio dell'insegnante.",
+         "tokens": [
+          "せんせい",
+          "の",
+          "とけい",
+          "です"
+         ],
+         "gp": "no",
+         "gap": {
+          "q": "せんせい ＿ とけいです。",
+          "a": "の",
+          "o": [
+           "の",
+           "を",
+           "に",
+           "か"
+          ],
+          "ex": "Il possessore viene prima, seguito da の."
+         }
+        }
+       ],
+       "drills": [
+        {
+         "gp": "kosoa",
+         "prompt": "L'oggetto è vicino a chi ascolta. Quale dimostrativo usi?",
+         "options": [
+          "それ",
+          "これ",
+          "あれ",
+          "どれ"
+         ],
+         "answer": "それ",
+         "jp": true,
+         "explain": "こ = vicino a chi parla, そ = vicino a chi ascolta, あ = lontano da entrambi."
+        },
+        {
+         "gp": "no",
+         "prompt": "Come si dice \"la borsa dell'amico\"?",
+         "options": [
+          "ともだちの かばん",
+          "かばんの ともだち",
+          "ともだちは かばん",
+          "ともだちを かばん"
+         ],
+         "answer": "ともだちの かばん",
+         "jp": true
+        },
+        {
+         "gp": "kosoa",
+         "prompt": "Come chiedi \"quale?\" nella serie ko-so-a-do?",
+         "options": [
+          "どれ",
+          "だれ",
+          "なん",
+          "あれ"
+         ],
+         "answer": "どれ",
+         "jp": true,
+         "explain": "だれ significa \"chi\", なん \"cosa\"."
+        }
+       ]
+      },
+      {
+       "id": "n5-3",
+       "title": "I numeri",
+       "glyph": "一二三",
+       "goal": "Leggere, dire e comporre i numeri da 1 a 999.",
+       "theory": [
+        "I numeri da 1 a 10 sono la base di tutto: <span class=\"jp\">いち に さん よん ご ろく なな はち きゅう じゅう</span>. Il 4, il 7 e il 9 hanno due letture (<span class=\"jp\">よん/し</span>, <span class=\"jp\">なな/しち</span>, <span class=\"jp\">きゅう/く</span>): nel contare si usano soprattutto <span class=\"jp\">よん</span>, <span class=\"jp\">なな</span> e <span class=\"jp\">きゅう</span>.",
+        "I numeri composti si costruiscono con moltiplicazione e somma. Il moltiplicatore va <b>prima</b> di じゅう: <span class=\"jp\">にじゅう</span> = 2×10 = 20. Ciò che si somma va <b>dopo</b>: <span class=\"jp\">じゅうさん</span> = 10+3 = 13. Quindi <span class=\"jp\">にじゅうさん</span> = 23.",
+        "Cento è <span class=\"jp\">ひゃく</span> e si combina allo stesso modo, con alcune eccezioni fonetiche: 300 <span class=\"jp\">さんびゃく</span>, 600 <span class=\"jp\">ろっぴゃく</span>, 800 <span class=\"jp\">はっぴゃく</span>."
+       ],
+       "grammar": [
+        {
+         "id": "numeri",
+         "title": "Numeri composti",
+         "it": "moltiplicatore prima di じゅう/ひゃく, addendo dopo"
+        }
+       ],
+       "words": [
+        {
+         "jp": "いち",
+         "kana": "いち",
+         "r": "ichi",
+         "it": "1",
+         "role": "lang"
+        },
+        {
+         "jp": "に",
+         "kana": "に",
+         "r": "ni",
+         "it": "2",
+         "role": "lang"
+        },
+        {
+         "jp": "さん",
+         "kana": "さん",
+         "r": "san",
+         "it": "3",
+         "role": "lang"
+        },
+        {
+         "jp": "よん",
+         "kana": "よん",
+         "r": "yon",
+         "it": "4",
+         "role": "lang",
+         "kanaAlts": [
+          "し"
+         ]
+        },
+        {
+         "jp": "ご",
+         "kana": "ご",
+         "r": "go",
+         "it": "5",
+         "role": "lang"
+        },
+        {
+         "jp": "ろく",
+         "kana": "ろく",
+         "r": "roku",
+         "it": "6",
+         "role": "lang"
+        },
+        {
+         "jp": "なな",
+         "kana": "なな",
+         "r": "nana",
+         "it": "7",
+         "role": "lang",
+         "kanaAlts": [
+          "しち"
+         ]
+        },
+        {
+         "jp": "はち",
+         "kana": "はち",
+         "r": "hachi",
+         "it": "8",
+         "role": "lang"
+        },
+        {
+         "jp": "きゅう",
+         "kana": "きゅう",
+         "r": "kyū",
+         "it": "9",
+         "role": "lang",
+         "kanaAlts": [
+          "く"
+         ]
+        },
+        {
+         "jp": "じゅう",
+         "kana": "じゅう",
+         "r": "jū",
+         "it": "10",
+         "role": "lang"
+        },
+        {
+         "jp": "ひゃく",
+         "kana": "ひゃく",
+         "r": "hyaku",
+         "it": "100",
+         "role": "lang"
+        }
+       ],
+       "sentences": [
+        {
+         "jp": "にじゅうさん",
+         "r": "nijūsan",
+         "it": "23",
+         "tokens": [
+          "に",
+          "じゅう",
+          "さん"
+         ],
+         "gp": "numeri",
+         "build": "Componi il numero 23"
+        },
+        {
+         "jp": "じゅうはち",
+         "r": "jūhachi",
+         "it": "18",
+         "tokens": [
+          "じゅう",
+          "はち"
+         ],
+         "gp": "numeri",
+         "build": "Componi il numero 18"
+        },
+        {
+         "jp": "よんじゅうご",
+         "r": "yonjūgo",
+         "it": "45",
+         "tokens": [
+          "よん",
+          "じゅう",
+          "ご"
+         ],
+         "gp": "numeri",
+         "build": "Componi il numero 45"
+        },
+        {
+         "jp": "ひゃくにじゅう",
+         "r": "hyakunijū",
+         "it": "120",
+         "tokens": [
+          "ひゃく",
+          "に",
+          "じゅう"
+         ],
+         "gp": "numeri",
+         "build": "Componi il numero 120"
+        }
+       ],
+       "drills": [
+        {
+         "gp": "numeri",
+         "prompt": "Come si dice 11?",
+         "options": [
+          "じゅういち",
+          "いちじゅう",
+          "じゅうに",
+          "いちいち"
+         ],
+         "answer": "じゅういち",
+         "jp": true,
+         "explain": "10 + 1: prima じゅう, poi いち."
+        },
+        {
+         "gp": "numeri",
+         "prompt": "Come si dice 20?",
+         "options": [
+          "にじゅう",
+          "じゅうに",
+          "にいち",
+          "じゅうじゅう"
+         ],
+         "answer": "にじゅう",
+         "jp": true,
+         "explain": "2 × 10: il moltiplicatore va prima di じゅう."
+        },
+        {
+         "gp": "numeri",
+         "prompt": "Quanto fa さんじゅうご?",
+         "options": [
+          "35",
+          "53",
+          "315",
+          "30"
+         ],
+         "answer": "35"
+        },
+        {
+         "gp": "numeri",
+         "prompt": "Quanto fa ななじゅうきゅう?",
+         "options": [
+          "79",
+          "97",
+          "709",
+          "17"
+         ],
+         "answer": "79"
+        },
+        {
+         "gp": "numeri",
+         "prompt": "Come si dice 300?",
+         "options": [
+          "さんびゃく",
+          "さんひゃく",
+          "ひゃくさん",
+          "さんぴゃく"
+         ],
+         "answer": "さんびゃく",
+         "jp": true,
+         "explain": "Eccezione fonetica: dopo さん, ひゃく diventa びゃく."
+        },
+        {
+         "gp": "numeri",
+         "prompt": "Come si dice 600?",
+         "options": [
+          "ろっぴゃく",
+          "ろくひゃく",
+          "ろくびゃく",
+          "ひゃくろく"
+         ],
+         "answer": "ろっぴゃく",
+         "jp": true,
+         "explain": "Eccezione fonetica: ろく + ひゃく = ろっぴゃく."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "N5-c2",
+     "title": "Azioni quotidiane",
+     "lessons": [
+      {
+       "id": "n5-4",
+       "title": "I verbi in forma cortese: ます",
+       "glyph": "ます",
+       "goal": "Coniugare i verbi al presente, al passato e al negativo in forma cortese.",
+       "theory": [
+        "I verbi giapponesi non cambiano per persona: <span class=\"jp\">たべます</span> vale per io, tu, lui, noi e loro. Il soggetto, se è chiaro dal contesto, si omette.",
+        "La forma cortese ha quattro terminazioni da imparare subito: <b><span class=\"jp\">ます</span></b> (presente o futuro affermativo), <b><span class=\"jp\">ません</span></b> (negativo), <b><span class=\"jp\">ました</span></b> (passato), <b><span class=\"jp\">ませんでした</span></b> (passato negativo).",
+        "Il complemento oggetto si marca con <b><span class=\"jp\">を</span></b>, che si legge <b>o</b>: <span class=\"jp\">みずを のみます</span> = bevo acqua. Il verbo, come sempre, chiude la frase.",
+        "Il giapponese non ha un futuro grammaticale: <span class=\"jp\">いきます</span> significa sia \"vado\" sia \"andrò\". Lo chiariscono il contesto o una parola di tempo come <span class=\"jp\">あした</span> (domani). Le parole di tempo come <span class=\"jp\">きのう</span> (ieri) di solito non vogliono particelle."
+       ],
+       "grammar": [
+        {
+         "id": "masu",
+         "title": "V-ます / ません / ました / ませんでした",
+         "it": "forma cortese del verbo: presente, negativo, passato, passato negativo"
+        },
+        {
+         "id": "o",
+         "title": "N を V",
+         "it": "を marca il complemento oggetto (si legge \"o\")"
+        }
+       ],
+       "words": [
+        {
+         "jp": "たべます",
+         "kana": "たべます",
+         "r": "tabemasu",
+         "it": "mangiare",
+         "role": "lang"
+        },
+        {
+         "jp": "のみます",
+         "kana": "のみます",
+         "r": "nomimasu",
+         "it": "bere",
+         "role": "lang"
+        },
+        {
+         "jp": "いきます",
+         "kana": "いきます",
+         "r": "ikimasu",
+         "it": "andare",
+         "role": "lang"
+        },
+        {
+         "jp": "きます",
+         "kana": "きます",
+         "r": "kimasu",
+         "it": "venire",
+         "role": "lang"
+        },
+        {
+         "jp": "かえります",
+         "kana": "かえります",
+         "r": "kaerimasu",
+         "it": "tornare (a casa)",
+         "role": "lang"
+        },
+        {
+         "jp": "みます",
+         "kana": "みます",
+         "r": "mimasu",
+         "it": "guardare, vedere",
+         "role": "lang"
+        },
+        {
+         "jp": "よみます",
+         "kana": "よみます",
+         "r": "yomimasu",
+         "it": "leggere",
+         "role": "lang"
+        },
+        {
+         "jp": "します",
+         "kana": "します",
+         "r": "shimasu",
+         "it": "fare",
+         "role": "lang"
+        },
+        {
+         "jp": "みず",
+         "kana": "みず",
+         "r": "mizu",
+         "it": "acqua",
+         "role": "lang"
+        },
+        {
+         "jp": "きのう",
+         "kana": "きのう",
+         "r": "kinō",
+         "it": "ieri",
+         "role": "lang"
+        }
+       ],
+       "sentences": [
+        {
+         "jp": "わたしは ごはんを たべます。",
+         "r": "watashi wa gohan o tabemasu.",
+         "it": "Io mangio il riso.",
+         "tokens": [
+          "わたし",
+          "は",
+          "ごはん",
+          "を",
+          "たべます"
+         ],
+         "gp": "o"
+        },
+        {
+         "jp": "みずを のみます。",
+         "r": "mizu o nomimasu.",
+         "it": "Bevo acqua.",
+         "tokens": [
+          "みず",
+          "を",
+          "のみます"
+         ],
+         "gp": "o",
+         "gap": {
+          "q": "みず ＿ のみます。",
+          "a": "を",
+          "o": [
+           "を",
+           "は",
+           "の",
+           "か"
+          ],
+          "ex": "を marca il complemento oggetto e si legge \"o\"."
+         }
+        },
+        {
+         "jp": "きのう テレビを みました。",
+         "r": "kinō terebi o mimashita.",
+         "it": "Ieri ho guardato la televisione.",
+         "tokens": [
+          "きのう",
+          "テレビ",
+          "を",
+          "みました"
+         ],
+         "gp": "masu",
+         "alts": [
+          [
+           "テレビ",
+           "を",
+           "きのう",
+           "みました"
+          ]
+         ],
+         "gap": {
+          "q": "きのう テレビを ＿。",
+          "a": "みました",
+          "o": [
+           "みました",
+           "みます",
+           "みません",
+           "みませんでした"
+          ],
+          "ex": "Azione passata affermativa: ます → ました."
+         }
+        },
+        {
+         "jp": "ほんを よみません。",
+         "r": "hon o yomimasen.",
+         "it": "Non leggo libri.",
+         "tokens": [
+          "ほん",
+          "を",
+          "よみません"
+         ],
+         "gp": "masu",
+         "gap": {
+          "q": "ほんを ＿。",
+          "a": "よみません",
+          "o": [
+           "よみません",
+           "よみます",
+           "よみました",
+           "よみませんでした"
+          ],
+          "ex": "Presente negativo: ます → ません."
+         }
+        },
+        {
+         "jp": "きのう ほんを よみませんでした。",
+         "r": "kinō hon o yomimasen deshita.",
+         "it": "Ieri non ho letto libri.",
+         "tokens": [
+          "きのう",
+          "ほん",
+          "を",
+          "よみませんでした"
+         ],
+         "gp": "masu",
+         "alts": [
+          [
+           "ほん",
+           "を",
+           "きのう",
+           "よみませんでした"
+          ]
+         ]
+        }
+       ],
+       "drills": [
+        {
+         "gp": "masu",
+         "prompt": "たべます al passato",
+         "options": [
+          "たべました",
+          "たべません",
+          "たべませんでした",
+          "たべまして"
+         ],
+         "answer": "たべました",
+         "jp": true
+        },
+        {
+         "gp": "masu",
+         "prompt": "のみます al negativo",
+         "options": [
+          "のみません",
+          "のみました",
+          "のみませんでした",
+          "のみです"
+         ],
+         "answer": "のみません",
+         "jp": true
+        },
+        {
+         "gp": "masu",
+         "prompt": "いきます al passato negativo",
+         "options": [
+          "いきませんでした",
+          "いきました",
+          "いきません",
+          "いきでした"
+         ],
+         "answer": "いきませんでした",
+         "jp": true
+        },
+        {
+         "gp": "masu",
+         "prompt": "Cosa significa よみました?",
+         "options": [
+          "ho letto",
+          "leggo",
+          "non leggo",
+          "non ho letto"
+         ],
+         "answer": "ho letto"
+        },
+        {
+         "gp": "o",
+         "prompt": "Come si pronuncia la particella を?",
+         "options": [
+          "o",
+          "wa",
+          "e",
+          "wo-o"
+         ],
+         "answer": "o",
+         "explain": "Si scrive con il segno della riga W, ma oggi si pronuncia \"o\"."
+        }
+       ]
+      },
+      {
+       "id": "n5-5",
+       "title": "Le particelle di luogo e mezzo: に, へ, で",
+       "glyph": "に・で",
+       "goal": "Dire dove vai, con che mezzo e dove fai qualcosa.",
+       "theory": [
+        "Le <b>particelle</b> sono il cuore della grammatica giapponese: parole brevi che seguono un nome e ne indicano il ruolo nella frase, come le nostre preposizioni, ma messe dopo.",
+        "<b><span class=\"jp\">に</span></b> indica la <b>destinazione</b> (<span class=\"jp\">がっこうに いきます</span>, vado a scuola) e anche il momento preciso. <b><span class=\"jp\">へ</span></b>, letta <b>e</b>, indica la <b>direzione</b>: con i verbi di movimento è quasi intercambiabile con に.",
+        "<b><span class=\"jp\">で</span></b> ha due usi: il <b>luogo dove si svolge un'azione</b> (<span class=\"jp\">レストランで たべます</span>, mangio al ristorante) e il <b>mezzo</b> (<span class=\"jp\">でんしゃで</span>, in treno).",
+        "Riepilogo: を oggetto, に destinazione, へ direzione, で luogo dell'azione o mezzo. Una frase può contenerne diverse, e l'ordine dei complementi è abbastanza libero purché il verbo resti in fondo: <span class=\"jp\">バスで えきに いきます</span> e <span class=\"jp\">えきに バスで いきます</span> sono entrambe corrette."
+       ],
+       "grammar": [
+        {
+         "id": "ni",
+         "title": "luogo に いきます",
+         "it": "に: destinazione del movimento"
+        },
+        {
+         "id": "e",
+         "title": "luogo へ いきます",
+         "it": "へ (letta \"e\"): direzione"
+        },
+        {
+         "id": "de",
+         "title": "luogo/mezzo で V",
+         "it": "で: luogo dove si svolge l'azione, oppure mezzo"
+        }
+       ],
+       "words": [
+        {
+         "jp": "がっこう",
+         "kana": "がっこう",
+         "r": "gakkō",
+         "it": "scuola",
+         "role": "lang"
+        },
+        {
+         "jp": "うち",
+         "kana": "うち",
+         "r": "uchi",
+         "it": "casa (propria)",
+         "role": "lang"
+        },
+        {
+         "jp": "えき",
+         "kana": "えき",
+         "r": "eki",
+         "it": "stazione",
+         "role": "lang"
+        },
+        {
+         "jp": "レストラン",
+         "kana": "レストラン",
+         "r": "resutoran",
+         "it": "ristorante",
+         "role": "lang"
+        },
+        {
+         "jp": "としょかん",
+         "kana": "としょかん",
+         "r": "toshokan",
+         "it": "biblioteca",
+         "role": "lang"
+        },
+        {
+         "jp": "でんしゃ",
+         "kana": "でんしゃ",
+         "r": "densha",
+         "it": "treno",
+         "role": "lang"
+        },
+        {
+         "jp": "バス",
+         "kana": "バス",
+         "r": "basu",
+         "it": "autobus",
+         "role": "lang"
+        },
+        {
+         "jp": "あした",
+         "kana": "あした",
+         "r": "ashita",
+         "it": "domani",
+         "role": "lang"
+        }
+       ],
+       "sentences": [
+        {
+         "jp": "がっこうに いきます。",
+         "r": "gakkō ni ikimasu.",
+         "it": "Vado a scuola.",
+         "tokens": [
+          "がっこう",
+          "に",
+          "いきます"
+         ],
+         "gp": "ni",
+         "gap": {
+          "q": "がっこう ＿ いきます。",
+          "a": "に",
+          "o": [
+           "に",
+           "を",
+           "で",
+           "の"
+          ],
+          "ex": "に indica la destinazione del movimento."
+         }
+        },
+        {
+         "jp": "でんしゃで いきます。",
+         "r": "densha de ikimasu.",
+         "it": "Vado in treno.",
+         "tokens": [
+          "でんしゃ",
+          "で",
+          "いきます"
+         ],
+         "gp": "de",
+         "gap": {
+          "q": "でんしゃ ＿ いきます。",
+          "a": "で",
+          "o": [
+           "で",
+           "を",
+           "に",
+           "は"
+          ],
+          "ex": "で indica il mezzo con cui si compie l'azione."
+         }
+        },
+        {
+         "jp": "レストランで ごはんを たべます。",
+         "r": "resutoran de gohan o tabemasu.",
+         "it": "Mangio al ristorante.",
+         "tokens": [
+          "レストラン",
+          "で",
+          "ごはん",
+          "を",
+          "たべます"
+         ],
+         "gp": "de",
+         "alts": [
+          [
+           "ごはん",
+           "を",
+           "レストラン",
+           "で",
+           "たべます"
+          ]
+         ],
+         "gap": {
+          "q": "レストラン ＿ ごはんを たべます。",
+          "a": "で",
+          "o": [
+           "で",
+           "に",
+           "へ",
+           "を"
+          ],
+          "ex": "で indica il luogo dove si svolge l'azione."
+         }
+        },
+        {
+         "jp": "あした うちへ かえります。",
+         "r": "ashita uchi e kaerimasu.",
+         "it": "Domani torno a casa.",
+         "tokens": [
+          "あした",
+          "うち",
+          "へ",
+          "かえります"
+         ],
+         "gp": "e",
+         "alts": [
+          [
+           "うち",
+           "へ",
+           "あした",
+           "かえります"
+          ]
+         ],
+         "gap": {
+          "q": "あした うち ＿ かえります。",
+          "a": "へ",
+          "o": [
+           "へ",
+           "を",
+           "で",
+           "の"
+          ],
+          "ex": "へ (letta \"e\") indica la direzione. Anche に sarebbe corretto."
+         }
+        },
+        {
+         "jp": "としょかんで ほんを よみます。",
+         "r": "toshokan de hon o yomimasu.",
+         "it": "Leggo libri in biblioteca.",
+         "tokens": [
+          "としょかん",
+          "で",
+          "ほん",
+          "を",
+          "よみます"
+         ],
+         "gp": "de",
+         "alts": [
+          [
+           "ほん",
+           "を",
+           "としょかん",
+           "で",
+           "よみます"
+          ]
+         ],
+         "gap": {
+          "q": "としょかんで ほん ＿ よみます。",
+          "a": "を",
+          "o": [
+           "を",
+           "に",
+           "へ",
+           "の"
+          ],
+          "ex": "を marca il complemento oggetto."
+         }
+        },
+        {
+         "jp": "バスで えきに いきます。",
+         "r": "basu de eki ni ikimasu.",
+         "it": "Vado alla stazione in autobus.",
+         "tokens": [
+          "バス",
+          "で",
+          "えき",
+          "に",
+          "いきます"
+         ],
+         "gp": "ni",
+         "alts": [
+          [
+           "えき",
+           "に",
+           "バス",
+           "で",
+           "いきます"
+          ]
+         ]
+        }
+       ],
+       "drills": [
+        {
+         "gp": "e",
+         "prompt": "Come si legge la particella へ?",
+         "options": [
+          "e",
+          "he",
+          "ha",
+          "o"
+         ],
+         "answer": "e"
+        },
+        {
+         "gp": "de",
+         "prompt": "Quale particella indica il luogo dove si svolge un'azione?",
+         "options": [
+          "で",
+          "に",
+          "を",
+          "の"
+         ],
+         "answer": "で",
+         "jp": true
+        },
+        {
+         "gp": "ni",
+         "prompt": "Quale particella indica la destinazione di いきます?",
+         "options": [
+          "に",
+          "で",
+          "を",
+          "の"
+         ],
+         "answer": "に",
+         "jp": true
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "N5-c3",
+     "title": "Descrivere e leggere i primi kanji",
+     "lessons": [
+      {
+       "id": "n5-6",
+       "title": "Gli aggettivi in い e in な",
+       "glyph": "い・な",
+       "goal": "Descrivere persone e cose con i due tipi di aggettivo, anche al negativo.",
+       "theory": [
+        "Il giapponese ha <b>due famiglie di aggettivi</b>, che si comportano in modo diverso.",
+        "Gli <b>aggettivi in い</b> finiscono in い e si coniugano come piccoli verbi: <span class=\"jp\">たかい</span> (caro) al negativo diventa <span class=\"jp\">たかくない</span>, togliendo い e aggiungendo くない. Davanti a un nome si mettono così come sono: <span class=\"jp\">たかい くるま</span>.",
+        "Gli <b>aggettivi in な</b> si comportano come nomi: <span class=\"jp\">しずかです</span> (è tranquillo), negativo <span class=\"jp\">しずかじゃありません</span>. Davanti a un nome prendono <b>な</b>: <span class=\"jp\">しずかな まち</span>, una città tranquilla.",
+        "Eccezione da ricordare: <span class=\"jp\">きれい</span> (bello, pulito) finisce in い ma è un aggettivo <b>な</b>: <span class=\"jp\">きれいな はな</span>. Per dire \"questo + nome\" si usa <span class=\"jp\">この</span> (non これ): <span class=\"jp\">この ほん</span>, questo libro."
+       ],
+       "grammar": [
+        {
+         "id": "i-adj",
+         "title": "Aggettivi in い",
+         "it": "たかい → たかくない; たかい + nome"
+        },
+        {
+         "id": "na-adj",
+         "title": "Aggettivi in な",
+         "it": "しずか → しずかじゃありません; しずかな + nome"
+        }
+       ],
+       "words": [
+        {
+         "jp": "おおきい",
+         "kana": "おおきい",
+         "r": "ōkii",
+         "it": "grande",
+         "role": "lang"
+        },
+        {
+         "jp": "ちいさい",
+         "kana": "ちいさい",
+         "r": "chiisai",
+         "it": "piccolo",
+         "role": "lang"
+        },
+        {
+         "jp": "たかい",
+         "kana": "たかい",
+         "r": "takai",
+         "it": "alto, costoso",
+         "role": "lang"
+        },
+        {
+         "jp": "やすい",
+         "kana": "やすい",
+         "r": "yasui",
+         "it": "economico",
+         "role": "lang"
+        },
+        {
+         "jp": "おもしろい",
+         "kana": "おもしろい",
+         "r": "omoshiroi",
+         "it": "interessante",
+         "role": "lang"
+        },
+        {
+         "jp": "しずか",
+         "kana": "しずか",
+         "r": "shizuka",
+         "it": "tranquillo (agg. な)",
+         "role": "lang"
+        },
+        {
+         "jp": "きれい",
+         "kana": "きれい",
+         "r": "kirei",
+         "it": "bello, pulito (agg. な)",
+         "role": "lang"
+        },
+        {
+         "jp": "げんき",
+         "kana": "げんき",
+         "r": "genki",
+         "it": "in forma (agg. な)",
+         "role": "lang"
+        },
+        {
+         "jp": "まち",
+         "kana": "まち",
+         "r": "machi",
+         "it": "città",
+         "role": "lang"
+        },
+        {
+         "jp": "この",
+         "kana": "この",
+         "r": "kono",
+         "it": "questo (+ nome)",
+         "role": "lang"
+        }
+       ],
+       "sentences": [
+        {
+         "jp": "この ほんは おもしろいです。",
+         "r": "kono hon wa omoshiroi desu.",
+         "it": "Questo libro è interessante.",
+         "tokens": [
+          "この",
+          "ほん",
+          "は",
+          "おもしろい",
+          "です"
+         ],
+         "gp": "i-adj"
+        },
+        {
+         "jp": "しずかな まちです。",
+         "r": "shizuka na machi desu.",
+         "it": "È una città tranquilla.",
+         "tokens": [
+          "しずかな",
+          "まち",
+          "です"
+         ],
+         "gp": "na-adj",
+         "gap": {
+          "q": "＿ まちです。",
+          "a": "しずかな",
+          "o": [
+           "しずかな",
+           "しずかい",
+           "しずかの",
+           "しずか"
+          ],
+          "ex": "Davanti a un nome, l'aggettivo な prende な."
+         }
+        },
+        {
+         "jp": "この かばんは たかくないです。",
+         "r": "kono kaban wa takakunai desu.",
+         "it": "Questa borsa non è costosa.",
+         "tokens": [
+          "この",
+          "かばん",
+          "は",
+          "たかくない",
+          "です"
+         ],
+         "gp": "i-adj",
+         "gap": {
+          "q": "この かばんは ＿ です。",
+          "a": "たかくない",
+          "o": [
+           "たかくない",
+           "たかいじゃない",
+           "たかない",
+           "たかいない"
+          ],
+          "ex": "Negativo degli aggettivi い: si toglie い e si aggiunge くない."
+         }
+        },
+        {
+         "jp": "きれいな はなです。",
+         "r": "kirei na hana desu.",
+         "it": "È un bel fiore.",
+         "tokens": [
+          "きれいな",
+          "はな",
+          "です"
+         ],
+         "gp": "na-adj"
+        },
+        {
+         "jp": "わたしの くるまは ちいさいです。",
+         "r": "watashi no kuruma wa chiisai desu.",
+         "it": "La mia macchina è piccola.",
+         "tokens": [
+          "わたし",
+          "の",
+          "くるま",
+          "は",
+          "ちいさい",
+          "です"
+         ],
+         "gp": "i-adj"
+        }
+       ],
+       "drills": [
+        {
+         "gp": "na-adj",
+         "prompt": "Completa: ＿ まち (una città tranquilla)",
+         "options": [
+          "しずかな",
+          "しずかい",
+          "しずかの",
+          "しずかく"
+         ],
+         "answer": "しずかな",
+         "jp": true
+        },
+        {
+         "gp": "i-adj",
+         "prompt": "Negativo di たかいです",
+         "options": [
+          "たかくないです",
+          "たかいじゃありません",
+          "たかないです",
+          "たかくです"
+         ],
+         "answer": "たかくないです",
+         "jp": true
+        },
+        {
+         "gp": "na-adj",
+         "prompt": "きれい è un aggettivo…",
+         "options": [
+          "in な (eccezione)",
+          "in い",
+          "verbo",
+          "nome"
+         ],
+         "answer": "in な (eccezione)",
+         "explain": "Finisce in い ma si comporta come un aggettivo な: きれいな はな."
+        },
+        {
+         "gp": "na-adj",
+         "prompt": "Negativo di しずかです",
+         "options": [
+          "しずかじゃありません",
+          "しずかくないです",
+          "しずかないです",
+          "しずかません"
+         ],
+         "answer": "しずかじゃありません",
+         "jp": true
+        },
+        {
+         "gp": "i-adj",
+         "prompt": "Negativo di おおきいです",
+         "options": [
+          "おおきくないです",
+          "おおきいじゃありません",
+          "おおきないです",
+          "おおきません"
+         ],
+         "answer": "おおきくないです",
+         "jp": true
+        }
+       ]
+      },
+      {
+       "id": "n5-7",
+       "title": "I primi kanji",
+       "glyph": "山川木",
+       "goal": "Riconoscere dodici kanji fondamentali, il loro significato e le letture principali.",
+       "theory": [
+        "I <b>kanji</b> sono ideogrammi: ogni segno porta un significato, non solo un suono. Molti dei più semplici nascono da disegni stilizzati: <span class=\"jp\">山</span> è una montagna, <span class=\"jp\">川</span> un fiume che scorre, <span class=\"jp\">木</span> un albero con le radici, <span class=\"jp\">口</span> una bocca aperta.",
+        "Ogni kanji ha di solito <b>due tipi di lettura</b>. La lettura <b>kun</b> è giapponese e si usa quando il kanji sta da solo o con desinenze in hiragana (<span class=\"jp\">山 = やま</span>). La lettura <b>on</b> deriva dal cinese e si usa nelle parole composte (<span class=\"jp\">富士山 = ふじさん</span>, monte Fuji).",
+        "Nelle tabelle la lettura kun è scritta per convenzione in hiragana, e tra parentesi c'è la parte in hiragana che segue il kanji: <span class=\"jp\">ひと(つ)</span> si scrive <span class=\"jp\">一つ</span>. Per il livello N5 servono circa 100 kanji: si comincia da questi dodici."
+       ],
+       "kanji": [
+        {
+         "k": "一",
+         "on": [
+          "いち",
+          "いつ"
+         ],
+         "kun": [
+          "ひと(つ)"
+         ],
+         "it": "uno"
+        },
+        {
+         "k": "二",
+         "on": [
+          "に"
+         ],
+         "kun": [
+          "ふた(つ)"
+         ],
+         "it": "due"
+        },
+        {
+         "k": "三",
+         "on": [
+          "さん"
+         ],
+         "kun": [
+          "み(っつ)"
+         ],
+         "it": "tre"
+        },
+        {
+         "k": "人",
+         "on": [
+          "じん",
+          "にん"
+         ],
+         "kun": [
+          "ひと"
+         ],
+         "it": "persona"
+        },
+        {
+         "k": "日",
+         "on": [
+          "にち",
+          "じつ"
+         ],
+         "kun": [
+          "ひ",
+          "か"
+         ],
+         "it": "giorno, sole"
+        },
+        {
+         "k": "月",
+         "on": [
+          "げつ",
+          "がつ"
+         ],
+         "kun": [
+          "つき"
+         ],
+         "it": "luna, mese"
+        },
+        {
+         "k": "山",
+         "on": [
+          "さん"
+         ],
+         "kun": [
+          "やま"
+         ],
+         "it": "montagna"
+        },
+        {
+         "k": "川",
+         "on": [
+          "せん"
+         ],
+         "kun": [
+          "かわ"
+         ],
+         "it": "fiume"
+        },
+        {
+         "k": "口",
+         "on": [
+          "こう"
+         ],
+         "kun": [
+          "くち"
+         ],
+         "it": "bocca"
+        },
+        {
+         "k": "木",
+         "on": [
+          "もく",
+          "ぼく"
+         ],
+         "kun": [
+          "き"
+         ],
+         "it": "albero"
+        },
+        {
+         "k": "水",
+         "on": [
+          "すい"
+         ],
+         "kun": [
+          "みず"
+         ],
+         "it": "acqua"
+        },
+        {
+         "k": "火",
+         "on": [
+          "か"
+         ],
+         "kun": [
+          "ひ"
+         ],
+         "it": "fuoco"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "N4",
+   "code": "JLPT N4",
+   "title": "Frasi complesse e forma て",
+   "soon": true
+  },
+  {
+   "id": "N3",
+   "code": "JLPT N3",
+   "title": "Il giapponese di tutti i giorni",
+   "soon": true
+  },
+  {
+   "id": "N2",
+   "code": "JLPT N2",
+   "title": "Testi reali e registri",
+   "soon": true
+  },
+  {
+   "id": "N1",
+   "code": "JLPT N1",
+   "title": "Padronanza",
+   "soon": true
+  }
+ ]
+}

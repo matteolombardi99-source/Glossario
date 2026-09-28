@@ -1,0 +1,15 @@
+{
+  "name": "Sillabario",
+  "short_name": "Sillabario",
+  "description": "Corsi di lingua a livelli, con teoria, esercizi ed esami.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F3F5F8",
+  "theme_color": "#2A4A80",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
