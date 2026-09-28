@@ -3,7 +3,7 @@
    Stato salvato in localStorage (chiave LS_KEY); la sincronizzazione remota si aggancia a Store. */
 'use strict';
 
-const APP_VERSION = '2.0.1';
+const APP_VERSION = '2.2';
 const LS_KEY = 'sillabario.v2';
 const DAY = 864e5;
 const $app = document.getElementById('app');
@@ -81,15 +81,16 @@ const readingForms = r => uniq([r.replace(/\(.*?\)/g, ''), stripOkuri(r)]);
 
 /* ============================== stato ============================== */
 function freshState() {
-  return { v: 2, course: 'ja', courses: {}, settings: { romaji: 'auto', goalMin: 15, rate: 0.85, reviewMax: 30 }, log: {}, updatedAt: 0 };
+  return { v: 2, course: 'ja', courses: {}, settings: { romaji: 'auto', goalMin: 15, rate: 0.75, reviewMax: 30, voice: '', sound: 1 }, log: {}, updatedAt: 0 };
 }
 const Store = {
   load() { try { const r = localStorage.getItem(LS_KEY); if (!r) return null; const s = JSON.parse(r); return s && s.v === 2 ? s : null; } catch (e) { return null; } },
   save(s) { try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (e) { } },
-  remote: null // qui si aggancerà la sincronizzazione (fase 3)
+  remote: null // impostato da Sync quando il server è collegato
 };
 let S = Store.load() || freshState();
 S.settings = Object.assign(freshState().settings, S.settings || {});
+if (S.settings.rate === 0.85) S.settings.rate = 0.75; // vecchio predefinito, troppo veloce
 function save() { S.updatedAt = now(); Store.save(S); if (Store.remote) Store.remote.push(S); }
 function prog() { return S.courses[S.course] || (S.courses[S.course] = { placed: false, lessons: {}, chapters: {}, exams: {}, cards: {} }); }
 function logToday(ok, ms) {
@@ -103,6 +104,78 @@ function streak() {
   return n;
 }
 const minutesOn = k => Math.round(((S.log[k] && S.log[k].ms) || 0) / 60000);
+
+/* ============================== sincronizzazione (server Cloudflare) ============================== */
+function bestOf(a, b) { if (a == null) return b; if (b == null) return a; if (typeof a === 'number' && typeof b === 'number') return Math.max(a, b); return typeof a === 'number' ? a : b; }
+const clone = o => o == null ? o : JSON.parse(JSON.stringify(o));
+// Unisce i progressi di due dispositivi: per ogni elemento vale il ripasso più recente, per lezioni/test il risultato migliore.
+function mergeState(local, remote) {
+  if (!remote || remote.v !== 2) return local;
+  const newer = (remote.updatedAt || 0) > (local.updatedAt || 0) ? remote : local;
+  const out = clone(newer);
+  out.settings = Object.assign({}, freshState().settings, newer.settings, { sync: local.settings && local.settings.sync });
+  out.courses = {};
+  const L = local.courses || {}, R = remote.courses || {};
+  for (const id of new Set([...Object.keys(L), ...Object.keys(R)])) {
+    const a = L[id], b = R[id];
+    if (!a || !b) { out.courses[id] = clone(a || b); continue; }
+    if ((a.epoch || 0) !== (b.epoch || 0)) { out.courses[id] = clone((a.epoch || 0) > (b.epoch || 0) ? a : b); continue; } // azzerato su un dispositivo
+    const c = { placed: !!(a.placed || b.placed), lessons: {}, chapters: {}, exams: {}, cards: {} };
+    if (a.epoch) c.epoch = a.epoch;
+    for (const k of new Set([...Object.keys(a.lessons || {}), ...Object.keys(b.lessons || {})])) {
+      const x = (a.lessons || {})[k] || {}, y = (b.lessons || {})[k] || {};
+      c.lessons[k] = { practice: !!(x.practice || y.practice) }; const bst = bestOf(x.best, y.best); if (bst != null) c.lessons[k].best = bst;
+    }
+    for (const f of ['chapters', 'exams']) for (const k of new Set([...Object.keys(a[f] || {}), ...Object.keys(b[f] || {})])) c[f][k] = bestOf((a[f] || {})[k], (b[f] || {})[k]);
+    for (const k of new Set([...Object.keys(a.cards || {}), ...Object.keys(b.cards || {})])) {
+      const x = (a.cards || {})[k], y = (b.cards || {})[k];
+      c.cards[k] = clone(!x ? y : !y ? x : ((y.last || 0) > (x.last || 0) ? y : x));
+    }
+    out.courses[id] = c;
+  }
+  out.log = {};
+  const LL = local.log || {}, RL = remote.log || {};
+  for (const k of new Set([...Object.keys(LL), ...Object.keys(RL)])) { const x = LL[k], y = RL[k]; out.log[k] = clone(!x ? y : !y ? x : { n: Math.max(x.n, y.n), ok: Math.max(x.ok, y.ok), ms: Math.max(x.ms, y.ms) }); }
+  out.updatedAt = Math.max(local.updatedAt || 0, remote.updatedAt || 0);
+  return out;
+}
+const Sync = {
+  busy: false, last: 0, err: null, timer: null, token: null,
+  cfg() { const c = S.settings.sync; return c && c.url && c.code ? c : null; },
+  base(c) { return String(c.url).trim().replace(/\/+$/, ''); },
+  async call(path, opt = {}, c = this.cfg()) {
+    let r;
+    try { r = await fetch(this.base(c) + path, { method: opt.method || 'GET', body: opt.body, keepalive: !!opt.keepalive, cache: 'no-store', headers: Object.assign({ Authorization: 'Bearer ' + c.code }, opt.body ? { 'Content-Type': 'application/json' } : {}) }); }
+    catch (e) { throw new Error('Server non raggiungibile: controlla l\'indirizzo e la connessione.'); }
+    let data = null; try { data = await r.json(); } catch (e) { }
+    if (!r.ok) throw new Error(r.status === 401 ? 'Codice di accesso errato.' : r.status === 403 ? 'Il server non accetta richieste da questo sito: controlla ALLOWED_ORIGIN nel Worker.' : (data && data.error) || ('Errore del server (' + r.status + ').'));
+    return data;
+  },
+  async sync({ force = false } = {}) {
+    if (!this.cfg() || this.busy) return false;
+    this.busy = true; const before = JSON.stringify(S);
+    try {
+      let merged = S;
+      if (!force) { const remote = (await this.call('/progress')).state; if (remote) merged = mergeState(S, remote); }
+      await this.call('/progress', { method: 'PUT', body: JSON.stringify({ state: merged }) });
+      S = merged; Store.save(S); this.last = Date.now(); this.err = null;
+      if (JSON.stringify(S) !== before) {
+        if (COURSE && S.course !== COURSE.id) await loadCourse(S.course);
+        if (VIEW.screen !== 'session') render();
+      } else if (VIEW.screen === 'settings') render();
+      return true;
+    } catch (e) { this.err = e.message; if (VIEW.screen === 'settings') render(); return false; }
+    finally { this.busy = false; }
+  },
+  schedule(ms = 15000) { clearTimeout(this.timer); this.timer = setTimeout(() => this.sync(), ms); },
+  async azureToken() { // per la fase 4 (pronuncia e audio)
+    if (this.token && this.token.exp > Date.now()) return this.token;
+    const d = await this.call('/token'); this.token = { token: d.token, region: d.region, exp: Date.now() + (d.expiresIn || 540) * 1000 }; return this.token;
+  }
+};
+Store.remote = { push() { Sync.schedule(); } };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && Sync.cfg()) { clearTimeout(Sync.timer); Sync.sync(); } else if (document.visibilityState === 'visible' && Sync.cfg()) Sync.schedule(500); });
+window.addEventListener('online', () => { if (Sync.cfg()) Sync.schedule(500); });
 
 /* ============================== corso ============================== */
 let REGISTRY = null, COURSE = null, IDX = null;
@@ -127,7 +200,7 @@ function indexCourse(c) {
         (le.words || []).forEach(w => add(le, { id: (w.role === 'read' ? 'r:' : 'w:') + w.jp, kind: 'word', ...w }));
         (le.kanji || []).forEach(k => add(le, { id: 'j:' + k.k, kind: 'kanji', ...k }));
         (le.grammar || []).forEach(g => add(le, { id: 'g:' + g.id, kind: 'grammar', gid: g.id, title: g.title, it: g.it,
-          sentences: (le.sentences || []).filter(s => s.gp === g.id), drills: (le.drills || []).filter(d => d.gp === g.id) }));
+          sentences: (le.sentences || []).filter(s => s.gp === g.id), drills: (le.drills || []).filter(d => d.gp === g.id), transforms: (le.transforms || []).filter(t => t.gp === g.id) }));
       }
     }
   }
@@ -204,8 +277,30 @@ function nextStep() {
 /* ============================== voce ============================== */
 let voices = [];
 function loadVoices() { try { voices = speechSynthesis.getVoices() || []; } catch (e) { voices = []; } }
-if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-function voice() { const p = (COURSE && COURSE.tts || '').slice(0, 2).toLowerCase(); return voices.find(v => v.lang && v.lang.replace('_', '-').toLowerCase().startsWith(p)); }
+if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = () => { loadVoices(); if (VIEW && VIEW.screen === 'settings' && IDX) renderSettings(); }; }
+function courseVoices() {
+  const p = (COURSE && COURSE.tts || '').slice(0, 2).toLowerCase();
+  return voices.filter(v => v.lang && v.lang.replace('_', '-').toLowerCase().startsWith(p));
+}
+// punteggio di qualità: le voci "Premium"/"Enhanced" (iOS, macOS) e quelle neurali o online sono molto più naturali delle "compatte"
+function voiceScore(v) {
+  const n = (v.name + ' ' + v.voiceURI).toLowerCase();
+  let s = 0;
+  if (/premium/.test(n)) s += 60;
+  if (/enhanced|avanzat|migliorat|erweitert|améliorée|mejorada/.test(n)) s += 50;
+  if (/neural|natural|online/.test(n)) s += 45;
+  if (/google/.test(n)) s += 35;
+  if (/compact|eloquence/.test(n)) s -= 20;
+  if (/kyoko|otoya|o-ren|hattori|nanami|keita/.test(n)) s += 5;
+  if (/ja[-_]jp/i.test(v.lang)) s += 2;
+  return s;
+}
+function voiceQuality(v) { const sc = voiceScore(v); return sc >= 45 ? 'alta qualità' : sc >= 30 ? 'buona' : 'base'; }
+function voice() {
+  const vs = courseVoices(); if (!vs.length) return null;
+  if (S.settings.voice) { const chosen = vs.find(v => v.voiceURI === S.settings.voice); if (chosen) return chosen; }
+  return vs.slice().sort((a, b) => voiceScore(b) - voiceScore(a))[0];
+}
 const canListen = () => !!voice();
 function speak(text) {
   if (!('speechSynthesis' in window) || !text) return;
@@ -215,6 +310,107 @@ function speak(text) {
     speechSynthesis.cancel(); speechSynthesis.speak(u);
   } catch (e) { }
 }
+
+/* ============================== ordine dei tratti (dati KanjiVG, CC BY-SA 3.0) ============================== */
+let STROKES = null;
+async function loadStrokes() { try { STROKES = (await loadJSON('strokes.json')).strokes; } catch (e) { STROKES = {}; } }
+const hasStrokes = ch => !!(STROKES && STROKES[ch]);
+const SVGNS = 'http://www.w3.org/2000/svg';
+const _samp = new Map();
+function samplePath(d, n = 32) {
+  const key = n + '|' + d; if (_samp.has(key)) return _samp.get(key);
+  let host = document.getElementById('measure-svg');
+  if (!host) { host = document.createElementNS(SVGNS, 'svg'); host.id = 'measure-svg'; host.setAttribute('width', '0'); host.setAttribute('height', '0'); host.style.cssText = 'position:absolute;left:-9999px;visibility:hidden'; document.body.appendChild(host); }
+  const p = document.createElementNS(SVGNS, 'path'); p.setAttribute('d', d); host.appendChild(p);
+  const L = p.getTotalLength(); const pts = [];
+  for (let i = 0; i < n; i++) { const q = p.getPointAtLength(L * i / (n - 1)); pts.push([q.x, q.y]); }
+  host.removeChild(p);
+  const r = { pts, len: L }; _samp.set(key, r); return r;
+}
+function polyLen(p) { let L = 0; for (let i = 1; i < p.length; i++) L += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]); return L; }
+function resample(p, n = 32) {
+  if (p.length === 1) return Array.from({ length: n }, () => p[0].slice());
+  const L = polyLen(p); if (L === 0) return Array.from({ length: n }, () => p[0].slice());
+  const out = [p[0].slice()]; const step = L / (n - 1); let acc = 0; let i = 1; let prev = p[0];
+  while (out.length < n - 1 && i < p.length) {
+    const cur = p[i]; const seg = Math.hypot(cur[0] - prev[0], cur[1] - prev[1]);
+    if (acc + seg >= step && seg > 0) { const t = (step - acc) / seg; const np = [prev[0] + (cur[0] - prev[0]) * t, prev[1] + (cur[1] - prev[1]) * t]; out.push(np); prev = np; acc = 0; }
+    else { acc += seg; prev = cur; i++; }
+  }
+  while (out.length < n) out.push(p[p.length - 1].slice());
+  return out;
+}
+const centroid = p => [p.reduce((a, x) => a + x[0], 0) / p.length, p.reduce((a, x) => a + x[1], 0) / p.length];
+function meanDist(a, b) { let s = 0; for (let i = 0; i < a.length; i++) s += Math.hypot(a[i][0] - b[i][0], a[i][1] - b[i][1]); return s / a.length; }
+const strokeThr = len => Math.max(13, Math.min(21, len * 0.3));
+// Confronta un tratto disegnato (coordinate nel riquadro 109×109) con il tratto atteso: forma, direzione e ordine.
+function smooth(p, w = 2) { if (p.length < 5) return p; return p.map((_, i) => { let x = 0, y = 0, n = 0; for (let k = Math.max(0, i - w); k <= Math.min(p.length - 1, i + w); k++) { x += p[k][0]; y += p[k][1]; n++; } return [x / n, y / n]; }); }
+function judgeStroke(user, ch, idx) {
+  const exp = STROKES[ch]; const E = samplePath(exp[idx]);
+  const sm = smooth(user); const u = resample(sm); const ulen = polyLen(resample(sm, 12));
+  const dist = j => meanDist(u, samplePath(exp[j]).pts);
+  let ok = false;
+  // verso del tratto: il vettore inizio→fine deve andare nella stessa direzione di quello atteso
+  const ev = [E.pts[E.pts.length - 1][0] - E.pts[0][0], E.pts[E.pts.length - 1][1] - E.pts[0][1]];
+  const uv = [u[u.length - 1][0] - u[0][0], u[u.length - 1][1] - u[0][1]];
+  const evl = Math.hypot(...ev), uvl = Math.hypot(...uv);
+  if (evl > 8 && uvl > 4 && (ev[0] * uv[0] + ev[1] * uv[1]) / (evl * uvl) < -0.3) {
+    const ce = centroid(E.pts), cu = centroid(u);
+    if (Math.hypot(cu[0] - ce[0], cu[1] - ce[1]) < 20) return { ok: false, why: 'dir' };
+  }
+  if (E.len < 16) {
+    const ce = centroid(E.pts), cu = centroid(u);
+    ok = Math.hypot(cu[0] - ce[0], cu[1] - ce[1]) < 16 && ulen < E.len * 3 + 25;
+  } else {
+    ok = dist(idx) < strokeThr(E.len) && ulen > E.len * 0.4;
+    if (!ok && meanDist(u.slice().reverse(), E.pts) < strokeThr(E.len) && ulen > E.len * 0.4) return { ok: false, why: 'dir' };
+  }
+  const d0 = dist(idx);
+  // un altro tratto del carattere corrisponde molto meglio: ordine sbagliato (se viene dopo) o tratto già fatto (se viene prima)
+  for (let j = 0; j < exp.length; j++) {
+    if (j === idx) continue;
+    const Ej = samplePath(exp[j]);
+    if (E.len < 16 && Ej.len < 16) continue; // lineette del dakuten e segni minuti: quasi identiche, l'ordine tra loro non si giudica
+    const dj = dist(j);
+    const close = Ej.len >= 16 ? dj < strokeThr(Ej.len) : Math.hypot(...[0, 1].map(k => centroid(u)[k] - centroid(Ej.pts)[k])) < 10;
+    if (close && dj < d0 * 0.6) return { ok: false, why: j > idx ? 'order' : 'again' };
+  }
+  if (ok) return { ok: true };
+  return { ok: false, why: ulen < 4 ? 'short' : 'shape' };
+}
+function strokeSVG(ch, { cls = '', anim = false, from = 0, speed = 0.55 } = {}) {
+  const S_ = STROKES[ch] || [];
+  return S_.map((d, i) => i < from ? '' : `<path d="${d}" pathLength="1" ${anim ? `class="anim" style="--d:${((i - from) * speed).toFixed(2)}s"` : ''}/>`).join('');
+}
+function openStrokes(ch, label, sayText) {
+  if (!hasStrokes(ch)) return;
+  const n = STROKES[ch].length;
+  const el = sheet(`<h2>Come si scrive ${esc(ch)}</h2><p class="lead">${esc(label)} · ${n} ${n === 1 ? 'tratto' : 'tratti'}. Come regola generale si procede dall'alto in basso e da sinistra a destra, ma conta l'ordine mostrato qui.</p>
+    <div class="stroke-demo"><svg viewBox="0 0 109 109" class="trace demo" id="demo"><g class="grid"><line x1="54.5" y1="0" x2="54.5" y2="109"/><line x1="0" y1="54.5" x2="109" y2="54.5"/></g><g class="ghost">${strokeSVG(ch)}</g><g class="ink" id="demoink">${strokeSVG(ch, { anim: true })}</g></svg></div>
+    <div class="cta-row center"><button class="btn" id="replay">Ripeti</button><button class="btn ghost" data-close>Chiudi</button></div>`);
+  el.querySelector('[data-close]').onclick = () => el.remove();
+  el.querySelector('#replay').onclick = () => { const g = el.querySelector('#demoink'); g.innerHTML = ''; requestAnimationFrame(() => { g.innerHTML = strokeSVG(ch, { anim: true }); }); speak(sayText || ch); };
+  speak(sayText || ch);
+}
+
+/* ============================== suoni ============================== */
+let AC = null;
+function audioCtx() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } } if (AC && AC.state === 'suspended') AC.resume().catch(() => { }); return AC; }
+function tone(f, t0, dur, type = 'sine', gain = 0.07) {
+  const c = audioCtx(); if (!c) return;
+  const o = c.createOscillator(), g = c.createGain(); const t = c.currentTime + t0;
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+}
+const SFX = {
+  ok() { tone(784, 0, 0.14); tone(1175, 0.07, 0.2); },
+  bad() { tone(220, 0, 0.18, 'triangle', 0.06); tone(185, 0.09, 0.22, 'triangle', 0.05); },
+  stroke() { tone(988, 0, 0.07, 'sine', 0.035); },
+  pair() { tone(1047, 0, 0.1, 'sine', 0.05); },
+  done() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.1, 0.3, 'sine', 0.06)); }
+};
+function sfx(k) { if (S.settings.sound !== 0 && SFX[k]) SFX[k](); if (k === 'bad' && navigator.vibrate) try { navigator.vibrate(40); } catch (e) { } }
 
 /* ============================== domande ============================== */
 // Ogni domanda: {type:'mcq'|'roma'|'kana'|'build', item, stage, tid, prompt, sub, big, bigKind, say, audioOnly, options, optKind, answer, answers, tokens, orders, bank, sol, explain, level}
@@ -239,10 +435,31 @@ function grammarTemplates(g) {
       return { type: 'build', prompt: s.build || 'Traduci in giapponese', sub: s.build ? null : s.it, tokens: s.tokens, orders: [s.tokens, ...(s.alts || [])], bank: shuffle(s.tokens.concat(extra)), sayAfter: s.jp, sol: { jp: s.jp, r: s.r, it: s.build ? null : s.it } };
     } });
   });
+  (g.transforms || []).forEach((t, i) => T.push({ stage: 2, tid: g.id + '#t' + i, make: () => ({ type: 'kana', prompt: t.task, big: t.from || null, bigKind: 'sent', answers: t.to, answer: t.to[0], kata: false, sayAfter: t.to[0], sol: { jp: t.to[0] } }) }));
   g.drills.forEach((d, i) => T.push({ stage: 1, tid: g.id + '#d' + i, make: () => ({ type: 'mcq', prompt: d.prompt, options: shuffle(d.options), optKind: d.jp ? 'jp' : null, answer: d.answer, explain: d.explain, long: d.options.some(o => o.length > 12), sol: { jp: d.jp ? d.answer : null, it: d.jp ? null : d.answer } }) }));
   return T;
 }
 
+function traceQ(ch, label, guided, sol) {
+  return guided
+    ? { type: 'trace', char: ch, guided: true, prompt: 'Ricalca il carattere', sub: 'Segui l\'ordine dei tratti: «' + label + '»', say: ch, sol }
+    : { type: 'trace', char: ch, guided: false, prompt: 'Scrivi a memoria', sub: '«' + label + '»', sol };
+}
+function matchQ(its) {
+  const pairs = []; const seenR = new Set();
+  for (const it of shuffle(its)) {
+    let L, R, lk;
+    if (it.kind === 'kana') { L = it.k; R = it.r; lk = 'g'; }
+    else if (it.kind === 'word') { L = it.jp; R = it.role === 'read' ? it.r : it.it; lk = 'jp'; }
+    else if (it.kind === 'kanji') { L = it.k; R = it.it; lk = 'g'; }
+    else continue;
+    if (seenR.has(R)) continue; seenR.add(R);
+    pairs.push({ id: it.id, L, R, lk });
+    if (pairs.length >= 5) break;
+  }
+  if (pairs.length < 4) return null;
+  return { type: 'match', prompt: 'Abbina le coppie', sub: 'Tocca un elemento a sinistra e il suo corrispondente a destra.', pairs, Lord: shuffle(pairs.map((_, i) => i)), Rord: shuffle(pairs.map((_, i) => i)), item: pairs[0].id, items: pairs.map(p => p.id), stage: 0, tid: 'match#' + pairs.map(p => p.id).join(','), level: item(pairs[0].id).lesson.level };
+}
 function makeQ(it, stage, opt = {}) {
   const lv = it.lesson.level;
   const listen = !opt.noListen && canListen();
@@ -253,6 +470,7 @@ function makeQ(it, stage, opt = {}) {
     else if (stage === 1) q = listen && Math.random() < 0.35
       ? { type: 'mcq', prompt: 'Ascolta: quale carattere hai sentito?', audioOnly: it.k, options: options(it.k, pool.map(x => x.k)), optKind: 'g', answer: it.k, sol }
       : { type: 'mcq', prompt: 'Quale carattere si legge «' + it.r + '»?', options: options(it.k, pool.map(x => x.k)), optKind: 'g', answer: it.k, sol };
+    else if (opt.trace === true || (opt.trace !== false && hasStrokes(it.k) && Math.random() < 0.35)) q = traceQ(it.k, it.r, !!opt.guided, sol);
     else q = { type: 'roma', prompt: 'Scrivi la lettura in lettere latine', big: it.k, bigKind: 'glyph', say: it.k, answers: it.alt, answer: it.r, placeholder: 'es. ka', sol };
   } else if (it.kind === 'word' && it.role === 'read') {
     const pool = wordPool('read'); const sol = { jp: it.jp, r: it.r, it: it.it };
@@ -260,6 +478,7 @@ function makeQ(it, stage, opt = {}) {
     else if (stage === 1) q = listen && Math.random() < 0.35
       ? { type: 'mcq', prompt: 'Ascolta: quale parola hai sentito?', audioOnly: it.jp, options: options(it.jp, pool.filter(x => x.lesson.script === it.lesson.script).map(x => x.jp)), optKind: 'jp', answer: it.jp, sol }
       : { type: 'mcq', prompt: 'Cosa significa?', big: it.jp, bigKind: 'word', say: it.jp, options: options(it.it, pool.map(x => x.it)), answer: it.it, sol };
+    else if (listen && Math.random() < 0.4) q = { type: 'kana', prompt: 'Dettato: ascolta e scrivi la parola', audioOnly: it.jp, answers: [it.kana], answer: it.kana, kata: isKata(it.kana), sol };
     else q = { type: 'roma', prompt: 'Scrivi la lettura in lettere latine', big: it.jp, bigKind: 'word', say: it.jp, answers: [it.r], answer: it.r, placeholder: 'lettura', sol };
   } else if (it.kind === 'word') {
     const pool = wordPool('lang'); const sol = { jp: it.jp, r: it.r, it: it.it };
@@ -267,6 +486,7 @@ function makeQ(it, stage, opt = {}) {
     else if (stage === 1) q = listen && Math.random() < 0.35
       ? { type: 'mcq', prompt: 'Ascolta e scegli il significato', audioOnly: it.jp, options: options(it.it, pool.map(x => x.it)), answer: it.it, sol }
       : { type: 'mcq', prompt: 'Come si dice «' + it.it + '»?', options: options(it.jp, pool.map(x => x.jp)), optKind: 'jp', answer: it.jp, sol };
+    else if (listen && Math.random() < 0.3) q = { type: 'kana', prompt: 'Dettato: ascolta e scrivi', audioOnly: it.jp, answers: [it.kana, ...(it.kanaAlts || [])], answer: it.kana, kata: isKata(it.kana), sol };
     else q = { type: 'kana', prompt: 'Scrivi in giapponese', sub: '«' + it.it + '»', answers: [it.kana, ...(it.kanaAlts || [])], answer: it.kana, kata: isKata(it.kana), sayAfter: it.jp, sol };
   } else if (it.kind === 'kanji') {
     const pool = kanjiPool(); const sol = kanjiSol(it);
@@ -274,6 +494,7 @@ function makeQ(it, stage, opt = {}) {
     else if (stage === 1) q = Math.random() < 0.5
       ? { type: 'mcq', prompt: 'Quale kanji significa «' + it.it + '»?', options: options(it.k, pool.map(x => x.k)), optKind: 'g', answer: it.k, sol }
       : { type: 'mcq', prompt: 'Qual è la lettura kun di questo kanji?', big: it.k, bigKind: 'glyph', options: options(it.kun[0], pool.filter(x => x.kun[0] !== it.kun[0]).map(x => x.kun[0])), optKind: 'jp', answer: it.kun[0], sayAfter: readingForms(it.kun[0])[0], sol };
+    else if (opt.trace === true || (opt.trace !== false && hasStrokes(it.k) && Math.random() < 0.35)) q = traceQ(it.k, it.it, !!opt.guided, sol);
     else q = { type: 'kana', prompt: 'Scrivi una lettura di questo kanji', sub: 'va bene sia on sia kun', big: it.k, bigKind: 'glyph', answers: kanjiReadings(it).flatMap(readingForms), answer: kanjiReadings(it).join('・'), sol };
   } else if (it.kind === 'grammar') {
     const T = grammarTemplates(it).filter(t => !(opt.used && opt.used.has(t.tid)));
@@ -296,13 +517,17 @@ function buildPractice(le) {
   const its = lessonItems(le); const used = new Set();
   const plain = its.filter(i => i.kind !== 'grammar'), gram = its.filter(i => i.kind === 'grammar');
   const A = shuffle(plain).map(i => makeQ(i, 0));
+  const traceable = plain.filter(i => (i.kind === 'kana' || i.kind === 'kanji') && hasStrokes(i.k));
+  const TR = shuffle(traceable).slice(0, 6).map(i => makeQ(i, 2, { trace: true, guided: true }));
+  const M = plain.length >= 4 ? [matchQ(plain)] : [];
   const B = [];
   gram.forEach(g => { for (let k = 0; k < 4; k++) { const q = makeQ(g, k < 1 ? 0 : k < 3 ? 1 : 2, { used }); if (q) B.push(q); } });
   shuffle(plain).forEach(i => B.push(makeQ(i, 1)));
-  const C = shuffle(plain).slice(0, 3).map(i => makeQ(i, 2));
-  const cap = Math.max(30, A.length);
+  const C = shuffle(plain).slice(0, 3).map(i => makeQ(i, 2, { trace: false }));
+  const cap = Math.max(30, A.length) + TR.length + M.length;
+  // ordine: riconoscimento, abbinamento, ricalco guidato, poi richiamo e produzione
   const rest = shuffle(B).concat(C);
-  return A.concat(rest).slice(0, cap).filter(Boolean);
+  return A.concat(M, TR, rest).filter(Boolean).slice(0, cap);
 }
 function buildVerify(le) {
   const its = lessonItems(le); const used = new Set(); const qs = [];
@@ -375,6 +600,8 @@ function grade(q, ok) {
   logToday(ok, ms);
   const first = !q.retry;
   if (SES.kind !== 'placement') SES.results.push({ q, ok, first });
+  SES.combo = ok ? (SES.combo || 0) + 1 : 0;
+  if (q.type === 'match') { (q._st.itemOk || []).forEach(([id, iok]) => count(id, iok)); save(); return; }
   count(q.item, ok);
   if (first) {
     if (SES.kind === 'review') schedule(q.item, ok);
@@ -547,8 +774,8 @@ function renderLesson() {
   const n = le.chapter.lessons.indexOf(le) + 1;
   let blocks = '';
   if (le.grammar && le.grammar.length) blocks += `<div class="box"><h3>Schemi grammaticali</h3><div class="gram">${le.grammar.map(g => `<div class="gp"><span class="jp">${esc(g.title)}</span><span>${esc(g.it)}</span></div>`).join('')}</div></div>`;
-  if (le.kana) blocks += `<div class="box"><h3>Caratteri · tocca per ascoltare</h3><div class="grid-k">${le.kana.map(k => `<button class="kcell" data-say="${esc(k.k)}"><span class="g">${esc(k.k)}</span><span class="r">${esc(k.r)}</span></button>`).join('')}</div></div>`;
-  if (le.kanji) blocks += `<div class="box"><h3>Kanji · tocca per ascoltare la lettura kun</h3><div class="grid-j">${le.kanji.map(k => `<button class="jcell" data-say="${esc(readingForms(k.kun[0])[1])}"><span class="g">${esc(k.k)}</span><span class="m">${esc(k.it)}</span><span class="r"><i>on</i> ${esc(k.on.join('・'))}</span><span class="r"><i>kun</i> ${esc(k.kun.join('・'))}</span></button>`).join('')}</div></div>`;
+  if (le.kana) blocks += `<div class="box"><h3>Caratteri · tocca per ascoltare e vedere come si scrive</h3><div class="grid-k">${le.kana.map(k => `<button class="kcell" data-char="${esc(k.k)}" data-label="${esc(k.r)}" data-sayt="${esc(k.k)}"><span class="g">${esc(k.k)}</span><span class="r">${esc(k.r)}</span></button>`).join('')}</div></div>`;
+  if (le.kanji) blocks += `<div class="box"><h3>Kanji · tocca per ascoltare e vedere come si scrive</h3><div class="grid-j">${le.kanji.map(k => `<button class="jcell" data-char="${esc(k.k)}" data-label="${esc(k.it)}" data-sayt="${esc(readingForms(k.kun[0])[1])}"><span class="g">${esc(k.k)}</span><span class="m">${esc(k.it)}</span><span class="r"><i>on</i> ${esc(k.on.join('・'))}</span><span class="r"><i>kun</i> ${esc(k.kun.join('・'))}</span></button>`).join('')}</div></div>`;
   const romaToggle = ro ? '' : '<button class="linkish small" data-roma>Mostra romaji</button>';
   if (le.words) blocks += `<div class="box ${ro ? '' : 'hide-ro'}"><div class="box-h"><h3>${le.words[0].role === 'read' ? 'Parole da leggere' : 'Vocabolario'}</h3>${romaToggle}</div><div class="rows">${le.words.map(w => `<button class="row" data-say="${esc(w.jp)}"><span><span class="j">${esc(w.jp)}</span><span class="ro">${esc(w.r)}</span></span><span class="it">${esc(w.it)}</span></button>`).join('')}</div></div>`;
   if (le.sentences && le.sentences.length && !le.sentences[0].build) blocks += `<div class="box ${ro ? '' : 'hide-ro'}"><div class="box-h"><h3>Esempi</h3>${romaToggle}</div><div class="rows">${le.sentences.map(s => `<button class="row" data-say="${esc(s.jp)}"><span><span class="j">${esc(s.jp)}</span><span class="ro">${esc(s.r)}</span></span><span class="it">${esc(s.it)}</span></button>`).join('')}</div></div>`;
@@ -565,6 +792,7 @@ function renderLesson() {
       <li class="step locked"><span class="node">3</span><div><b>Pronuncia</b><span>Ripetizione con valutazione automatica: arriva con il collegamento ad Azure.</span></div><button class="btn ghost" disabled>Presto</button></li>
     </ol>`, 'path');
   bindShell(); bindSay();
+  $app.querySelectorAll('[data-char]').forEach(b => b.onclick = () => { if (hasStrokes(b.dataset.char)) openStrokes(b.dataset.char, b.dataset.label, b.dataset.sayt); else speak(b.dataset.sayt); });
   document.getElementById('back').onclick = () => go({ screen: 'path' });
   document.getElementById('practice').onclick = () => startSession('practice', { le });
   document.getElementById('verify').onclick = () => { if (pr || pd) startSession('verify', { le }); };
@@ -608,21 +836,43 @@ function renderSession() {
     body = `<div class="answer-line jp">${st.built.map((bi, k) => `<button class="tile" data-un="${k}">${esc(q.bank[bi])}</button>`).join('') || '<span class="ph">Tocca i blocchi nell\'ordine giusto</span>'}</div>
       <div class="bank jp">${q.bank.map((t, i) => `<button class="tile ${st.built.includes(i) ? 'used' : ''}" data-tile="${i}" ${st.checked ? 'disabled' : ''}>${esc(t)}</button>`).join('')}</div>`;
   }
-  const can = q.type === 'mcq' ? st.sel != null : q.type === 'build' ? st.built.length > 0 : st.typed.trim() !== '';
+  if (q.type === 'trace') {
+    const strokes = STROKES[q.char]; const n = strokes.length;
+    const showGhost = q.guided || st.helped || st.checked;
+    body = `<div class="trace-wrap"><svg class="trace" id="trace" viewBox="0 0 109 109" role="img" aria-label="Riquadro di scrittura">
+      <g class="grid"><line x1="54.5" y1="0" x2="54.5" y2="109"/><line x1="0" y1="54.5" x2="109" y2="54.5"/></g>
+      <g class="ghost">${showGhost ? strokeSVG(q.char) : ''}</g>
+      <g class="ink" id="tink">${(STROKES[q.char] || []).slice(0, st.idx || 0).map(d => `<path d="${d}"/>`).join('')}</g>
+      <g class="hint" id="thint"></g>
+      <polyline id="live" class="live" points=""/></svg></div>
+      <div class="trace-info"><span id="tmsg" class="${st.msgBad ? 'bad' : ''}">${esc(st.msg || (st.checked ? '' : 'Tratto ' + ((st.idx || 0) + 1) + ' di ' + n))}</span>
+      ${st.checked ? '' : `<div class="cta-row center">${q.guided ? '<button class="btn ghost" id="tdemo">Mostra l\'ordine</button>' : `<button class="btn ghost" id="thelp" ${st.helped ? 'disabled' : ''}>Aiuto</button>`}<button class="btn ghost" id="treset">Ricomincia</button></div>`}</div>`;
+  } else if (q.type === 'match') {
+    const M = st.m || (st.m = { L: null, R: null, done: [], errs: [], flash: null });
+    const tile = (side, i) => { const p = q.pairs[i]; const done = M.done.includes(i); const sel = M[side] === i; const bad = M.flash && M.flash[side] === i;
+      return `<button class="mt ${side === 'L' && p.lk === 'g' ? 'g' : side === 'L' ? 'jp' : ''} ${done ? 'done' : ''} ${sel ? 'sel' : ''} ${bad ? 'bad' : ''}" data-m="${side}${i}" ${done || st.checked ? 'disabled' : ''}>${esc(side === 'L' ? p.L : p.R)}</button>`; };
+    body = `<div class="match"><div class="mcol">${q.Lord.map(i => tile('L', i)).join('')}</div><div class="mcol">${q.Rord.map(i => tile('R', i)).join('')}</div></div>`;
+  }
+  const auto = q.type === 'trace' || q.type === 'match';
+  const can = q.type === 'mcq' ? st.sel != null : q.type === 'build' ? st.built.length > 0 : auto ? false : st.typed.trim() !== '';
   let foot;
   if (st.checked) {
     const solJp = q.sol && q.sol.jp ? `<span class="jp">${esc(q.sol.jp)}</span>` : '';
     const solR = q.sol && q.sol.r ? (ro || q.type === 'roma' || q.item.startsWith('k:') || q.item.startsWith('j:') ? ` <span class="sol-r">${esc(q.sol.r)}</span>` : ` <details class="sol-rd"><summary>lettura</summary>${esc(q.sol.r)}</details>`) : '';
     const solIt = q.sol && q.sol.it ? ` · ${esc(q.sol.it)}` : '';
-    const right = q.type === 'build' ? q.tokens.join(' ') : q.answer;
-    foot = `<div class="fb ${st.right ? 'ok' : 'no'}" role="status"><b>${st.right ? pickOne(['Corretto', 'Esatto', 'Giusto']) : 'Non è corretto'}</b>
-      ${st.right ? '' : `<div class="sol">Risposta giusta: <span class="jp">${esc(right)}</span></div>`}
+    const right = q.type === 'build' ? q.tokens.join(' ') : q.type === 'trace' ? q.char : q.type === 'match' ? '' : q.answer;
+    const combo = st.right && SES.combo >= 3 ? `<span class="combo">${SES.combo} di fila</span>` : '';
+    const traceNote = q.type === 'trace' ? `<div class="ex">${st.helped ? 'Hai usato l\'aiuto: conta come da ripassare.' : (st.mistakes || 0) === 0 ? 'Tutti i tratti giusti al primo colpo.' : (st.mistakes) + (st.mistakes === 1 ? ' tratto da rifare.' : ' tratti da rifare.')}</div>` : '';
+    const matchNote = q.type === 'match' ? `<div class="ex">${(st.m.errs.length ? 'Abbinamenti sbagliati: ' + st.m.errs.length + '.' : 'Nessun errore.')}</div>` : '';
+    foot = `<div class="fb ${st.right ? 'ok' : 'no'}" role="status"><b>${st.right ? pickOne(['Corretto', 'Esatto', 'Giusto']) : 'Non è corretto'}${combo}</b>${traceNote}${matchNote}
+      ${st.right || !right ? '' : `<div class="sol">Risposta giusta: <span class="jp">${esc(right)}</span></div>`}
       ${solJp || solIt ? `<div class="sol">${solJp}${solR}${solIt}</div>` : ''}
       ${q.explain ? `<div class="ex">${esc(q.explain)}</div>` : ''}
       ${!st.right && (s.kind === 'practice' || s.kind === 'review') && (q.retry || 0) < 2 ? '<div class="ex">La ritroverai più avanti in questa sessione.</div>' : ''}</div>
       <button class="btn wide ${st.right ? 'ok' : 'bad'}" id="next">Continua</button>`;
   } else {
-    foot = `<button class="btn wide" id="check" ${can ? '' : 'disabled'}>Verifica</button><p class="hint keys">Invio per confermare${q.type === 'mcq' ? ' · tasti 1–4 per scegliere' : ''}</p>`;
+    foot = auto ? `<p class="hint">${q.type === 'trace' ? (q.guided ? 'Scrivi col dito sopra il carattere grigio, un tratto alla volta.' : 'Scrivi il carattere col dito, un tratto alla volta, nell\'ordine giusto.') : 'Quando hai abbinato tutto, si passa avanti.'}</p><button class="btn wide" id="check" hidden>Verifica</button>`
+      : `<button class="btn wide" id="check" ${can ? '' : 'disabled'}>Verifica</button><p class="hint keys">Invio per confermare${q.type === 'mcq' ? ' · tasti 1–4 per scegliere' : ''}</p>`;
   }
   const quitLabel = s.kind === 'placement' ? 'Termina il test qui' : 'Esci';
   $app.innerHTML = `<div class="page session"><main class="wrap">
@@ -652,6 +902,8 @@ function renderSession() {
       };
     }
     document.getElementById('check').onclick = check;
+    if (q.type === 'trace') bindTrace(q, st);
+    if (q.type === 'match') bindMatch(q, st);
   } else {
     const nx = document.getElementById('next'); nx.onclick = advance; nx.focus();
   }
@@ -662,18 +914,71 @@ function renderSession() {
     else if (!st.checked && q.type === 'mcq' && /^[1-4]$/.test(e.key)) { const o = q.options[+e.key - 1]; if (o != null) { st.sel = o; renderSession(); } }
   };
 }
+function bindTrace(q, st) {
+  const svg = document.getElementById('trace'); if (!svg) return;
+  const strokes = STROKES[q.char]; const n = strokes.length;
+  st.idx = st.idx || 0; st.mistakes = st.mistakes || 0; st.miss = st.miss || {};
+  const allowed = n <= 3 ? 1 : Math.floor(n / 3);
+  const live = document.getElementById('live'), ink = document.getElementById('tink'), hint = document.getElementById('thint'), msg = document.getElementById('tmsg');
+  const setMsg = (t, bad) => { st.msg = t; st.msgBad = !!bad; msg.textContent = t; msg.className = bad ? 'bad' : ''; };
+  const showHint = i => { const p0 = samplePath(strokes[i]).pts[0]; hint.innerHTML = `<path d="${strokes[i]}" pathLength="1" class="anim" style="--d:0s"/><circle cx="${p0[0].toFixed(1)}" cy="${p0[1].toFixed(1)}" r="3.2"/>`; };
+  let pts = null;
+  const pos = e => { const r = svg.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 109, (e.clientY - r.top) / r.height * 109]; };
+  svg.addEventListener('pointerdown', e => { e.preventDefault(); try { svg.setPointerCapture(e.pointerId); } catch (_) { } audioCtx(); pts = [pos(e)]; live.classList.remove('bad'); live.setAttribute('points', pts[0].join(',')); });
+  svg.addEventListener('pointermove', e => { if (!pts) return; e.preventDefault(); const p = pos(e), l = pts[pts.length - 1]; if (Math.hypot(p[0] - l[0], p[1] - l[1]) > 0.7) { pts.push(p); live.setAttribute('points', pts.map(x => x[0].toFixed(1) + ',' + x[1].toFixed(1)).join(' ')); } });
+  const end = () => { if (!pts) return; const u = pts; pts = null; onStroke(u); };
+  svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+  function onStroke(u) {
+    const r = judgeStroke(u, q.char, st.idx);
+    if (r.ok) {
+      live.setAttribute('points', ''); hint.innerHTML = '';
+      ink.insertAdjacentHTML('beforeend', `<path d="${strokes[st.idx]}"/>`);
+      st.idx++; sfx('stroke');
+      if (st.idx >= n) { st.traceOk = !st.helped && st.mistakes <= allowed; st.msg = ''; check(); return; }
+      setMsg('Tratto ' + (st.idx + 1) + ' di ' + n);
+    } else {
+      if (r.why === 'short' && polyLen(u) < 1.5) { live.setAttribute('points', ''); return; }
+      st.mistakes++; st.miss[st.idx] = (st.miss[st.idx] || 0) + 1;
+      live.classList.add('bad'); setTimeout(() => { live.setAttribute('points', ''); live.classList.remove('bad'); }, 380);
+      if (S.settings.sound !== 0) tone(233, 0, 0.12, 'triangle', 0.04);
+      setMsg(r.why === 'dir' ? 'Direzione sbagliata: questo tratto va nel verso opposto.' : r.why === 'order' ? 'Quel tratto viene dopo: segui l\'ordine.' : r.why === 'again' ? 'Quel tratto l\'hai già fatto.' : 'Non corrisponde al tratto ' + (st.idx + 1) + '. Riprova.', true);
+      if (st.miss[st.idx] >= 2 || (q.guided && st.miss[st.idx] >= 1)) showHint(st.idx);
+    }
+  }
+  const demo = document.getElementById('tdemo'); if (demo) demo.onclick = () => { hint.innerHTML = ''; requestAnimationFrame(() => { hint.innerHTML = strokeSVG(q.char, { anim: true, from: st.idx }); }); };
+  const help = document.getElementById('thelp'); if (help) help.onclick = () => { st.helped = true; renderSession(); };
+  const reset = document.getElementById('treset'); if (reset) reset.onclick = () => { st.idx = 0; st.msg = ''; st.msgBad = false; renderSession(); };
+}
+function bindMatch(q, st) {
+  const M = st.m;
+  $app.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
+    const side = b.dataset.m[0], i = +b.dataset.m.slice(1);
+    audioCtx(); M.flash = null; M[side] = M[side] === i ? null : i;
+    if (M.L != null && M.R != null) {
+      if (M.L === M.R) { M.done.push(M.L); sfx('pair'); if (q.pairs[M.L].lk === 'jp' || q.pairs[M.L].lk === 'g') speak(q.pairs[M.L].L); }
+      else { if (!M.errs.includes(M.L)) M.errs.push(M.L); M.flash = { L: M.L, R: M.R }; if (S.settings.sound !== 0) tone(233, 0, 0.12, 'triangle', 0.04); }
+      M.L = M.R = null;
+    }
+    if (M.done.length === q.pairs.length) { st.itemOk = q.pairs.map((p, k) => [p.id, !M.errs.includes(k)]); st.matchOk = M.errs.length <= 1; check(); return; }
+    renderSession();
+  });
+}
 function isRight(q, st) {
   if (q.type === 'mcq') return st.sel === q.answer;
   if (q.type === 'roma') return q.answers.map(normRoma).includes(normRoma(st.typed));
   if (q.type === 'kana') { const got = normKana(inputToKana(st.typed.trim(), true)); return q.answers.some(a => normKana(a) === got); }
   if (q.type === 'build') { const got = st.built.map(i => q.bank[i]).join('|'); return q.orders.some(o => o.join('|') === got); }
+  if (q.type === 'trace') return !!st.traceOk;
+  if (q.type === 'match') return !!st.matchOk;
   return false;
 }
 function check() {
   const q = SES.qs[SES.i], st = q._st;
   st.right = isRight(q, st); st.checked = true;
   grade(q, st.right);
-  if (st.right && q.sayAfter) speak(q.sayAfter);
+  sfx(st.right ? 'ok' : 'bad');
+  if (st.right && q.sayAfter) setTimeout(() => speak(q.sayAfter), 280);
+  if (q.type === 'trace' && st.right && q.say) setTimeout(() => speak(q.say), 280);
   renderSession();
 }
 function advance() {
@@ -696,6 +1001,7 @@ function advance() {
 /* ============================== risultati ============================== */
 function renderResult() {
   const r = VIEW.res;
+  if (r.passed && (r.kind === 'verify' || r.kind === 'chapter' || r.kind === 'exam') && !r._played) { r._played = true; setTimeout(() => sfx('done'), 150); }
   if (r.kind === 'placement') {
     const t = r.target;
     $app.innerHTML = `<div class="page"><main class="wrap"><section class="result">
@@ -772,6 +1078,12 @@ function renderStats() {
 
 /* ============================== impostazioni ============================== */
 function seg(name, cur, opts) { return `<div class="seg" role="radiogroup">${opts.map(([v, l]) => `<button role="radio" aria-checked="${String(v) === String(cur)}" class="${String(v) === String(cur) ? 'on' : ''}" data-set="${name}" data-v="${v}">${l}</button>`).join('')}</div>`; }
+function syncStatus() {
+  if (!Sync.cfg()) return 'Non collegato: i progressi restano solo su questo dispositivo. Collega il tuo server per averli su tutti i dispositivi e per attivare i servizi di Azure.';
+  if (Sync.err) return 'Collegato, ma l\'ultima sincronizzazione non è riuscita: ' + esc(Sync.err);
+  if (Sync.last) { const d = new Date(Sync.last); return 'Collegato. Ultima sincronizzazione alle ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + '. I progressi si aggiornano da soli.'; }
+  return 'Collegato. I progressi si aggiornano da soli.';
+}
 function renderSettings() {
   const st = S.settings;
   $app.innerHTML = shell(`<header class="page-head"><h1>Impostazioni</h1></header>
@@ -780,24 +1092,55 @@ function renderSettings() {
       <div class="set-row col"><div><b>Romaji</b><span>In un percorso serio le lettere latine si abbandonano presto. Automatico: visibili nel livello 0, poi solo su richiesta.</span></div>${seg('romaji', st.romaji, [['auto', 'Automatico'], ['always', 'Sempre'], ['never', 'Mai']])}</div>
       <div class="set-row col"><div><b>Obiettivo giornaliero</b><span>Minuti di studio al giorno.</span></div>${seg('goalMin', st.goalMin, [[5, '5'], [10, '10'], [15, '15'], [20, '20'], [30, '30']])}</div>
       <div class="set-row col"><div><b>Ripassi per sessione</b><span>Quanti elementi al massimo in una sessione di ripasso.</span></div>${seg('reviewMax', st.reviewMax, [[20, '20'], [30, '30'], [50, '50'], [100, '100']])}</div>
-      <div class="set-row col"><div><b>Velocità della voce</b><span>${canListen() ? 'Voce giapponese del dispositivo disponibile.' : 'Nessuna voce giapponese trovata sul dispositivo: gli esercizi di ascolto vengono saltati.'}</span></div>${seg('rate', st.rate, [[0.7, 'Lenta'], [0.85, 'Media'], [1, 'Naturale']])}<button class="linkish small" id="testvoice">Prova la voce</button></div>
+      <div class="set-row col"><div><b>Suoni</b><span>Effetti sonori per risposte giuste, errori e lezioni superate.</span></div>${seg('sound', st.sound, [[1, 'Attivi'], [0, 'Disattivati']])}</div>
+      <div class="set-row col"><div><b>Voce</b><span>${canListen() ? 'Voce in uso: ' + esc(voice().name) + ' (' + voiceQuality(voice()) + ').' : 'Nessuna voce giapponese trovata sul dispositivo: gli esercizi di ascolto vengono saltati.'}${canListen() && courseVoices().every(v => voiceQuality(v) === 'base') ? ' Sul dispositivo c\'è solo la versione base: puoi scaricarne una di qualità migliore dalle impostazioni del telefono (vedi sotto).' : ''}</span></div>
+        ${courseVoices().length > 1 ? `<select class="sel" id="voicesel"><option value="">Automatica (la migliore disponibile)</option>${courseVoices().slice().sort((a, b) => voiceScore(b) - voiceScore(a)).map(v => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === S.settings.voice ? 'selected' : ''}>${esc(v.name)} · ${voiceQuality(v)}</option>`).join('')}</select>` : ''}
+        <details class="howto"><summary>Come avere una voce più naturale su iPhone</summary><p>Apri Impostazioni → Accessibilità → Contenuti letti ad alta voce → Voci → Giapponese. Scegli una voce (per esempio Kyoko o Otoya) e scarica la versione <b>Avanzata</b> o <b>Premium</b>, se disponibile. Poi chiudi e riapri Sillabario: la sceglie da sola.</p></details></div>
+      <div class="set-row col"><div><b>Velocità della voce</b><span>Per imparare conviene partire lenti.</span></div>${seg('rate', st.rate, [[0.6, 'Molto lenta'], [0.75, 'Lenta'], [0.9, 'Media'], [1, 'Naturale']])}<button class="linkish small" id="testvoice">Prova la voce</button></div>
     </section>
     <section class="panel set">
-      <div class="set-row"><div><b>Backup e trasferimento</b><span>Copia i progressi su un altro dispositivo.</span></div><button class="btn ghost" id="backup">Apri</button></div>
+      <div class="set-row col"><div><b>Sincronizzazione e servizi</b><span>${syncStatus()}</span></div>
+        <label class="eyebrow lbl" for="syurl">Indirizzo del server</label>
+        <input class="field" id="syurl" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://sillabario-api.tuonome.workers.dev" value="${esc((S.settings.sync && S.settings.sync.url) || '')}">
+        <label class="eyebrow lbl" for="sycode">Codice di accesso</label>
+        <input class="field" id="sycode" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="il codice scelto nel Worker" value="${esc((S.settings.sync && S.settings.sync.code) || '')}">
+        <div class="cta-row"><button class="btn" id="syconnect">${Sync.cfg() ? 'Salva e riprova' : 'Collega e prova'}</button>${Sync.cfg() ? '<button class="btn ghost" id="synow">Sincronizza ora</button><button class="btn ghost danger" id="syoff">Scollega</button>' : ''}</div>
+        <div class="msg" id="symsg"></div>
+      </div>
+    </section>
+    <section class="panel set">
+      <div class="set-row"><div><b>Backup e trasferimento</b><span>Copia i progressi a mano su un altro dispositivo.</span></div><button class="btn ghost" id="backup">Apri</button></div>
       <div class="set-row"><div><b>Rifai il test d'ingresso</b><span>Ricolloca il percorso senza cancellare i ripassi.</span></div><button class="btn ghost" id="retest">Inizia</button></div>
       <div class="set-row"><div><b>Azzera i progressi</b><span>Cancella lezioni, ripassi e statistiche di questo corso.</span></div><button class="btn ghost danger" id="reset">Azzera</button></div>
       <div class="confirm" id="resetc" hidden><p>Sei sicuro? L'operazione non si può annullare. Se vuoi conservare i dati, fai prima un backup.</p><div class="cta-row"><button class="btn bad" id="resety">Sì, azzera</button><button class="btn ghost" id="resetn">Annulla</button></div></div>
     </section>
-    <p class="foot-note">Sillabario v${APP_VERSION} · progressi salvati su questo dispositivo</p>`, 'settings');
+    <p class="foot-note">Sillabario v${APP_VERSION} · ${Sync.cfg() ? 'progressi sincronizzati con il tuo server' : 'progressi salvati su questo dispositivo'}<br>Ordine dei tratti: <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener">KanjiVG</a> © Ulrich Apel, licenza CC BY-SA 3.0</p>`, 'settings');
   bindShell();
   $app.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; const v = b.dataset.v; S.settings[k] = isNaN(+v) ? v : +v; save(); renderSettings(); });
   document.getElementById('testvoice').onclick = () => speak('こんにちは。にほんごを べんきょうしましょう。');
+  const vsel = document.getElementById('voicesel'); if (vsel) vsel.onchange = () => { S.settings.voice = vsel.value; save(); renderSettings(); speak('こんにちは。'); };
   document.getElementById('backup').onclick = openBackup;
+  document.getElementById('syconnect').onclick = async () => {
+    const m = document.getElementById('symsg'); const url = document.getElementById('syurl').value.trim(); const code = document.getElementById('sycode').value;
+    if (!/^https?:\/\//.test(url) || !code) { m.className = 'msg no'; m.textContent = 'Inserisci l\'indirizzo completo (con https://) e il codice.'; return; }
+    m.className = 'msg'; m.textContent = 'Collegamento in corso…';
+    try {
+      const h = await Sync.call('/health', {}, { url, code });
+      if (!h.progress) throw new Error('Il Worker risponde, ma l\'archivio KV non è collegato (binding PROGRESS).');
+      S.settings.sync = { url, code }; Store.save(S);
+      const ok = await Sync.sync();
+      const az = h.azure ? 'Azure pronto (regione ' + h.region + ').' : 'Azure non ancora pronto: ' + (h.azureError || 'controlla chiave e regione') + '.';
+      const mm = document.getElementById('symsg');
+      if (mm) { mm.className = ok ? 'msg ok' : 'msg no'; mm.textContent = ok ? 'Collegato, progressi sincronizzati. ' + az : (Sync.err || 'Sincronizzazione non riuscita.'); }
+    } catch (e) { m.className = 'msg no'; m.textContent = e.message; }
+  };
+  const syn = document.getElementById('synow'); if (syn) syn.onclick = async () => { const m = document.getElementById('symsg'); m.textContent = 'Sincronizzazione…'; const ok = await Sync.sync(); const mm = document.getElementById('symsg'); if (mm) { mm.className = ok ? 'msg ok' : 'msg no'; mm.textContent = ok ? 'Sincronizzato.' : Sync.err; } };
+  const syo = document.getElementById('syoff'); if (syo) syo.onclick = () => { delete S.settings.sync; Store.save(S); toast('Server scollegato: i progressi restano su questo dispositivo.'); renderSettings(); };
   document.getElementById('langs').onclick = openLangs;
   document.getElementById('retest').onclick = () => startSession('placement');
   document.getElementById('reset').onclick = () => { document.getElementById('resetc').hidden = false; };
   document.getElementById('resetn').onclick = () => { document.getElementById('resetc').hidden = true; };
-  document.getElementById('resety').onclick = () => { delete S.courses[S.course]; save(); toast('Progressi azzerati.'); go({ screen: 'today' }); };
+  document.getElementById('resety').onclick = () => { S.courses[S.course] = { placed: false, lessons: {}, chapters: {}, exams: {}, cards: {}, epoch: now() }; save(); if (Sync.cfg()) Sync.sync({ force: false }); toast('Progressi azzerati.'); go({ screen: 'today' }); };
 }
 function sheet(html) {
   const el = document.createElement('div'); el.className = 'veil';
@@ -845,12 +1188,13 @@ function openBackup() {
 /* ============================== avvio ============================== */
 async function boot() {
   $app.innerHTML = '<div class="page"><main class="wrap"><p class="muted loading">Caricamento del corso…</p></main></div>';
-  try { await loadCourse(S.course); }
+  try { await Promise.all([loadCourse(S.course), loadStrokes()]); }
   catch (e) {
     $app.innerHTML = `<div class="page"><main class="wrap"><section class="result"><h1>Non riesco a caricare il corso</h1><p class="lead center">Controlla la connessione e riapri l'app. Se il problema continua, verifica che i file <b>courses.json</b> e <b>ja.json</b> siano stati caricati su GitHub insieme a index.html.</p><button class="btn" onclick="location.reload()">Riprova</button></section></main></div>`;
     return;
   }
   render();
+  if (Sync.cfg()) Sync.sync();
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
@@ -862,6 +1206,8 @@ window.__sill = {
   travel(days) { TIME_OFFSET += days * DAY; render(); },
   solve(wrong) {
     const q = SES && SES.qs[SES.i]; if (!q) return false; const st = q._st;
+    if (q.type === 'trace') { st.idx = STROKES[q.char].length; st.traceOk = !wrong; st.mistakes = wrong ? 9 : 0; check(); return true; }
+    if (q.type === 'match') { st.m = { L: null, R: null, done: q.pairs.map((_, i) => i), errs: wrong ? [0, 1] : [], flash: null }; st.itemOk = q.pairs.map((p, k) => [p.id, !(wrong && k < 2)]); st.matchOk = !wrong; check(); return true; }
     if (q.type === 'mcq') st.sel = wrong ? q.options.find(o => o !== q.answer) : q.answer;
     else if (q.type === 'roma') st.typed = wrong ? 'xxx' : q.answers[0];
     else if (q.type === 'kana') st.typed = wrong ? 'zzz' : q.answers[0];
@@ -871,5 +1217,5 @@ window.__sill = {
   },
   next() { advance(); },
   go(s) { go({ screen: s }); },
-  api: { makeQ, buildPractice, buildVerify, buildChapter, buildExam, buildReview, placementGroup, lessonItems, grammarTemplates, isRight, inputToKana }
+  api: { mergeState, Sync, judgeStroke, samplePath, matchQ, traceQ, makeQ, buildPractice, buildVerify, buildChapter, buildExam, buildReview, placementGroup, lessonItems, grammarTemplates, isRight, inputToKana }
 };

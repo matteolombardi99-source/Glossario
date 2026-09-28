@@ -279,11 +279,15 @@ h1{font-size:28px}
 .set .set-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:10px 0}
 .set .set-row + .set-row{border-top:1px solid var(--line)}
 .set .set-row.col{flex-direction:column;align-items:stretch}
-.set-row div{display:grid;gap:2px}
-.set-row div span{font-size:14px;color:var(--muted)}
+.set-row > div:first-child{display:grid;gap:2px}
+.set-row > div:first-child span{font-size:14px;color:var(--muted)}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
 .seg button{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 14px;font-weight:600;font-size:14px}
 .seg button.on{background:var(--ai);border-color:var(--ai);color:var(--ai-ink)}
+.sel{width:100%;font:500 15px var(--f-ui);padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.howto{font-size:14px;color:var(--muted)}
+.howto summary{cursor:pointer;color:var(--ai);font-weight:600}
+.howto p{margin:6px 0 0}
 .foot-note{margin-top:24px;font-size:13px;color:var(--muted);text-align:center}
 
 /* benvenuto e fogli */
@@ -307,12 +311,56 @@ h1{font-size:28px}
 .lang-opt .nat{font-family:var(--f-glyph);font-weight:600;font-size:18px;text-align:center}
 .lang-opt .tag{font-size:12px;color:var(--muted);font-weight:600}
 .lang-opt.on{border-color:var(--ai);box-shadow:0 0 0 3px var(--ai-soft)}
+.field{width:100%;font:500 15px var(--f-ui);padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.field:focus{outline:none;border-color:var(--ai)}
 .codebox{width:100%;min-height:110px;font:13px/1.4 ui-monospace,Menlo,monospace;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink);resize:vertical;word-break:break-all}
 .msg{font-size:14px;margin-top:8px;min-height:1.2em}
 .msg.ok{color:var(--ok)} .msg.no{color:var(--bad)}
 .toast{position:fixed;left:50%;bottom:calc(var(--tabh) + env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:30;transition:opacity .3s;max-width:calc(100% - 32px);text-align:center}
 .toast.out{opacity:0}
+
+/* ricalco */
+.trace-wrap{display:flex;justify-content:center;margin:6px 0 10px}
+.trace{width:min(100%,340px);aspect-ratio:1;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);touch-action:none;user-select:none;-webkit-user-select:none;display:block}
+.trace .grid line{stroke:var(--line);stroke-width:.5;stroke-dasharray:2 2}
+.trace .ghost path{fill:none;stroke:var(--sunk);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.trace .ink path{fill:none;stroke:var(--ink);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.trace .hint path{fill:none;stroke:var(--kihada);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.trace .hint circle{fill:var(--kihada)}
+.trace .live{fill:none;stroke:var(--ai);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.trace .live.bad{stroke:var(--bad)}
+.trace path.anim{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .5s ease-out forwards;animation-delay:var(--d)}
+@keyframes draw{to{stroke-dashoffset:0}}
+.trace.demo{width:min(100%,260px)}
+.trace.demo .ink path{stroke:var(--ai)}
+.stroke-demo{display:flex;justify-content:center;margin:14px 0}
+.trace-info{text-align:center;display:grid;gap:4px}
+.trace-info span{font-weight:600;min-height:1.5em}
+.trace-info span.bad{color:var(--bad)}
+/* abbinamenti */
+.match{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mcol{display:grid;gap:8px;align-content:start}
+.mt{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;border:2px solid var(--line);border-bottom-width:4px;border-radius:12px;background:var(--surface);padding:10px 8px;min-height:54px;display:flex;align-items:center;justify-content:center;font-weight:600;overflow-wrap:anywhere;transition:opacity .25s,transform .15s}
+.mt.g{font-family:var(--f-glyph);font-size:26px}
+.mt.jp{font-family:var(--f-jp);font-size:21px;font-weight:500}
+.mt:hover{background:var(--sunk)}
+.mt:focus-visible{outline:2px solid var(--ai)}
+.mt.sel{border-color:var(--ai);background:var(--ai-soft)}
+.mt.done{border-color:var(--ok);background:var(--ok-soft);opacity:.45;cursor:default}
+.mt.bad{border-color:var(--bad);background:var(--bad-soft);animation:shake .3s}
+/* feedback */
+.combo{display:inline-block;margin-left:10px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--kihada);color:#1b1405;border-radius:999px;padding:2px 9px;vertical-align:middle}
+.fb{animation:rise .22s ease-out}
+.opt.right{animation:pop .28s ease-out}
+.opt.wrong{animation:shake .3s}
+.stamp{animation:stampin .45s cubic-bezier(.2,1.4,.5,1) both}
+@keyframes rise{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes stampin{from{transform:rotate(-4deg) scale(1.8);opacity:0}to{transform:rotate(-4deg) scale(1);opacity:1}}
+.foot-note a{color:inherit}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion:reduce){.trace path.anim{stroke-dashoffset:0}}
 </style>
 </head>
 <body>

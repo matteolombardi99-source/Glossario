@@ -144,6 +144,13 @@ const course = {
           ['たなかさんは いしゃですか。', 'Tanaka-san wa isha desu ka.', 'Il signor Tanaka è medico?', 'たなかさん|は|いしゃ|です|か', 'ka', { gap: { q: 'たなかさんは いしゃです ＿。', a: 'か', o: ['か', 'は', 'の', 'を'], ex: 'か alla fine della frase la trasforma in domanda.' } }],
           ['いいえ、いしゃじゃありません。', 'iie, isha ja arimasen.', 'No, non è medico.', 'いいえ|いしゃ|じゃありません', 'ja-arimasen'],
           ['わたしは かいしゃいんじゃありません。', 'watashi wa kaishain ja arimasen.', 'Io non sono un impiegato.', 'わたし|は|かいしゃいん|じゃありません', 'ja-arimasen', { gap: { q: 'わたしは かいしゃいん ＿。', a: 'じゃありません', o: ['じゃありません', 'です', 'ですか', 'の'], ex: 'La frase è negativa: です diventa じゃありません.' } }]]),
+        transforms: [
+          { gp: 'ja-arimasen', task: 'Volgi al negativo', from: 'がくせいです。', to: ['がくせいじゃありません', 'がくせいではありません'] },
+          { gp: 'ja-arimasen', task: 'Volgi al negativo', from: 'いしゃです。', to: ['いしゃじゃありません', 'いしゃではありません'] },
+          { gp: 'ja-arimasen', task: 'Volgi al negativo', from: 'にほんじんです。', to: ['にほんじんじゃありません', 'にほんじんではありません'] },
+          { gp: 'ka', task: 'Trasforma in domanda', from: 'せんせいです。', to: ['せんせいですか'] },
+          { gp: 'ka', task: 'Trasforma in domanda', from: 'たなかさんは かいしゃいんです。', to: ['たなかさんはかいしゃいんですか'] },
+          { gp: 'wa-desu', task: 'Scrivi in giapponese: «Io sono italiano.»', from: '', to: ['わたしはイタリアじんです'] }],
         drills: [
           { gp: 'ja-arimasen', prompt: 'Qual è la forma negativa di です?', options: ['じゃありません', 'ですか', 'でした', 'ません'], answer: 'じゃありません', jp: true },
           { gp: 'wa-desu', prompt: 'Come si legge は quando marca il tema?', options: ['wa', 'ha', 'ba', 'e'], answer: 'wa' },
@@ -165,6 +172,10 @@ const course = {
           ['あれは だれの くるまですか。', 'are wa dare no kuruma desu ka.', 'Di chi è quella macchina laggiù?', 'あれ|は|だれ|の|くるま|です|か', 'no'],
           ['これは なんですか。', 'kore wa nan desu ka.', 'Che cos\'è questo?', 'これ|は|なん|です|か', 'kosoa', { gap: { q: '＿ は なんですか。', a: 'これ', o: ['これ', 'それ', 'あれ', 'どれ'], ex: 'L\'oggetto è vicino a chi parla: これ.' } }],
           ['せんせいの とけいです。', 'sensei no tokei desu.', 'È l\'orologio dell\'insegnante.', 'せんせい|の|とけい|です', 'no', { gap: { q: 'せんせい ＿ とけいです。', a: 'の', o: ['の', 'を', 'に', 'か'], ex: 'Il possessore viene prima, seguito da の.' } }]]),
+        transforms: [
+          { gp: 'no', task: 'Unisci con の: «il mio libro»', from: 'わたし ／ ほん', to: ['わたしのほん'] },
+          { gp: 'no', task: 'Unisci con の: «l\'ombrello dell\'insegnante»', from: 'せんせい ／ かさ', to: ['せんせいのかさ'] },
+          { gp: 'kosoa', task: 'Scrivi in giapponese: «Che cos\'è quello laggiù?»', from: '', to: ['あれはなんですか'] }],
         drills: [
           { gp: 'kosoa', prompt: 'L\'oggetto è vicino a chi ascolta. Quale dimostrativo usi?', options: ['それ', 'これ', 'あれ', 'どれ'], answer: 'それ', jp: true, explain: 'こ = vicino a chi parla, そ = vicino a chi ascolta, あ = lontano da entrambi.' },
           { gp: 'no', prompt: 'Come si dice "la borsa dell\'amico"?', options: ['ともだちの かばん', 'かばんの ともだち', 'ともだちは かばん', 'ともだちを かばん'], answer: 'ともだちの かばん', jp: true },
@@ -182,6 +193,13 @@ const course = {
           { jp: 'じゅうはち', r: 'jūhachi', it: '18', tokens: ['じゅう', 'はち'], gp: 'numeri', build: 'Componi il numero 18' },
           { jp: 'よんじゅうご', r: 'yonjūgo', it: '45', tokens: ['よん', 'じゅう', 'ご'], gp: 'numeri', build: 'Componi il numero 45' },
           { jp: 'ひゃくにじゅう', r: 'hyakunijū', it: '120', tokens: ['ひゃく', 'に', 'じゅう'], gp: 'numeri', build: 'Componi il numero 120' }],
+        transforms: [
+          { gp: 'numeri', task: 'Scrivi il numero in giapponese', from: '23', to: ['にじゅうさん'] },
+          { gp: 'numeri', task: 'Scrivi il numero in giapponese', from: '48', to: ['よんじゅうはち'] },
+          { gp: 'numeri', task: 'Scrivi il numero in giapponese', from: '16', to: ['じゅうろく'] },
+          { gp: 'numeri', task: 'Scrivi il numero in giapponese', from: '99', to: ['きゅうじゅうきゅう'] },
+          { gp: 'numeri', task: 'Scrivi il numero in giapponese', from: '300', to: ['さんびゃく'] },
+          { gp: 'numeri', task: 'Scrivi il numero in giapponese', from: '71', to: ['ななじゅういち', 'しちじゅういち'] }],
         drills: [
           { gp: 'numeri', prompt: 'Come si dice 11?', options: ['じゅういち', 'いちじゅう', 'じゅうに', 'いちいち'], answer: 'じゅういち', jp: true, explain: '10 + 1: prima じゅう, poi いち.' },
           { gp: 'numeri', prompt: 'Come si dice 20?', options: ['にじゅう', 'じゅうに', 'にいち', 'じゅうじゅう'], answer: 'にじゅう', jp: true, explain: '2 × 10: il moltiplicatore va prima di じゅう.' },
@@ -211,6 +229,16 @@ const course = {
           ['きのう テレビを みました。', 'kinō terebi o mimashita.', 'Ieri ho guardato la televisione.', 'きのう|テレビ|を|みました', 'masu', { alts: ['テレビ|を|きのう|みました'], gap: { q: 'きのう テレビを ＿。', a: 'みました', o: ['みました', 'みます', 'みません', 'みませんでした'], ex: 'Azione passata affermativa: ます → ました.' } }],
           ['ほんを よみません。', 'hon o yomimasen.', 'Non leggo libri.', 'ほん|を|よみません', 'masu', { gap: { q: 'ほんを ＿。', a: 'よみません', o: ['よみません', 'よみます', 'よみました', 'よみませんでした'], ex: 'Presente negativo: ます → ません.' } }],
           ['きのう ほんを よみませんでした。', 'kinō hon o yomimasen deshita.', 'Ieri non ho letto libri.', 'きのう|ほん|を|よみませんでした', 'masu', { alts: ['ほん|を|きのう|よみませんでした'] }]]),
+        transforms: [
+          { gp: 'masu', task: 'Volgi al passato', from: 'たべます', to: ['たべました'] },
+          { gp: 'masu', task: 'Volgi al negativo', from: 'のみます', to: ['のみません'] },
+          { gp: 'masu', task: 'Volgi al passato negativo', from: 'いきます', to: ['いきませんでした'] },
+          { gp: 'masu', task: 'Volgi al passato', from: 'みます', to: ['みました'] },
+          { gp: 'masu', task: 'Volgi al negativo', from: 'きます', to: ['きません'] },
+          { gp: 'masu', task: 'Volgi al passato', from: 'かえります', to: ['かえりました'] },
+          { gp: 'masu', task: 'Volgi al passato negativo', from: 'します', to: ['しませんでした'] },
+          { gp: 'o', task: 'Scrivi in giapponese: «Bevo acqua.»', from: 'みず ／ のみます', to: ['みずをのみます'] },
+          { gp: 'o', task: 'Scrivi in giapponese: «Leggo un libro.»', from: 'ほん ／ よみます', to: ['ほんをよみます'] }],
         drills: [
           { gp: 'masu', prompt: 'たべます al passato', options: ['たべました', 'たべません', 'たべませんでした', 'たべまして'], answer: 'たべました', jp: true },
           { gp: 'masu', prompt: 'のみます al negativo', options: ['のみません', 'のみました', 'のみませんでした', 'のみです'], answer: 'のみません', jp: true },
@@ -237,6 +265,11 @@ const course = {
           ['あした うちへ かえります。', 'ashita uchi e kaerimasu.', 'Domani torno a casa.', 'あした|うち|へ|かえります', 'e', { alts: ['うち|へ|あした|かえります'], gap: { q: 'あした うち ＿ かえります。', a: 'へ', o: ['へ', 'を', 'で', 'の'], ex: 'へ (letta "e") indica la direzione. Anche に sarebbe corretto.' } }],
           ['としょかんで ほんを よみます。', 'toshokan de hon o yomimasu.', 'Leggo libri in biblioteca.', 'としょかん|で|ほん|を|よみます', 'de', { alts: ['ほん|を|としょかん|で|よみます'], gap: { q: 'としょかんで ほん ＿ よみます。', a: 'を', o: ['を', 'に', 'へ', 'の'], ex: 'を marca il complemento oggetto.' } }],
           ['バスで えきに いきます。', 'basu de eki ni ikimasu.', 'Vado alla stazione in autobus.', 'バス|で|えき|に|いきます', 'ni', { alts: ['えき|に|バス|で|いきます'] }]]),
+        transforms: [
+          { gp: 'ni', task: 'Scrivi in giapponese: «Vado a scuola.»', from: 'がっこう ／ いきます', to: ['がっこうにいきます', 'がっこうへいきます'] },
+          { gp: 'de', task: 'Scrivi in giapponese: «Vado in autobus.»', from: 'バス ／ いきます', to: ['バスでいきます'] },
+          { gp: 'de', task: 'Scrivi in giapponese: «Leggo in biblioteca.»', from: 'としょかん ／ よみます', to: ['としょかんでよみます'] },
+          { gp: 'e', task: 'Scrivi in giapponese: «Torno a casa.»', from: 'うち ／ かえります', to: ['うちへかえります', 'うちにかえります'] }],
         drills: [
           { gp: 'e', prompt: 'Come si legge la particella へ?', options: ['e', 'he', 'ha', 'o'], answer: 'e' },
           { gp: 'de', prompt: 'Quale particella indica il luogo dove si svolge un\'azione?', options: ['で', 'に', 'を', 'の'], answer: 'で', jp: true },
@@ -263,6 +296,14 @@ const course = {
           ['この かばんは たかくないです。', 'kono kaban wa takakunai desu.', 'Questa borsa non è costosa.', 'この|かばん|は|たかくない|です', 'i-adj', { gap: { q: 'この かばんは ＿ です。', a: 'たかくない', o: ['たかくない', 'たかいじゃない', 'たかない', 'たかいない'], ex: 'Negativo degli aggettivi い: si toglie い e si aggiunge くない.' } }],
           ['きれいな はなです。', 'kirei na hana desu.', 'È un bel fiore.', 'きれいな|はな|です', 'na-adj'],
           ['わたしの くるまは ちいさいです。', 'watashi no kuruma wa chiisai desu.', 'La mia macchina è piccola.', 'わたし|の|くるま|は|ちいさい|です', 'i-adj']]),
+        transforms: [
+          { gp: 'i-adj', task: 'Volgi al negativo', from: 'たかいです。', to: ['たかくないです', 'たかくありません'] },
+          { gp: 'i-adj', task: 'Volgi al negativo', from: 'おおきいです。', to: ['おおきくないです', 'おおきくありません'] },
+          { gp: 'i-adj', task: 'Volgi al negativo', from: 'おもしろいです。', to: ['おもしろくないです', 'おもしろくありません'] },
+          { gp: 'na-adj', task: 'Volgi al negativo', from: 'しずかです。', to: ['しずかじゃありません', 'しずかではありません'] },
+          { gp: 'na-adj', task: 'Volgi al negativo', from: 'げんきです。', to: ['げんきじゃありません', 'げんきではありません'] },
+          { gp: 'na-adj', task: 'Unisci aggettivo e nome: «un bel fiore»', from: 'きれい ／ はな', to: ['きれいなはな'] },
+          { gp: 'i-adj', task: 'Unisci aggettivo e nome: «una macchina piccola»', from: 'ちいさい ／ くるま', to: ['ちいさいくるま'] }],
         drills: [
           { gp: 'na-adj', prompt: 'Completa: ＿ まち (una città tranquilla)', options: ['しずかな', 'しずかい', 'しずかの', 'しずかく'], answer: 'しずかな', jp: true },
           { gp: 'i-adj', prompt: 'Negativo di たかいです', options: ['たかくないです', 'たかいじゃありません', 'たかないです', 'たかくです'], answer: 'たかくないです', jp: true },
@@ -310,6 +351,7 @@ for (const l of course.levels) for (const c of l.chapters || []) for (const le o
     if (s.gap && new Set(s.gap.o).size !== s.gap.o.length) throw new Error(le.id + ': opzioni duplicate');
   }
   for (const d of le.drills || []) { if (!gps.has(d.gp)) throw new Error(le.id + ': esercizio senza punto grammaticale ' + d.prompt); if (!d.options.includes(d.answer)) throw new Error(le.id + ': risposta non tra le opzioni ' + d.prompt); if (new Set(d.options).size !== d.options.length) throw new Error('opzioni duplicate ' + d.prompt); }
+  for (const t of le.transforms || []) { if (!gps.has(t.gp)) throw new Error(le.id + ': trasformazione senza punto grammaticale ' + t.task); if (!t.to.length || t.to.some(a => !/^[\u3040-\u30ffー]+$/.test(a))) throw new Error(le.id + ': risposta di trasformazione non in kana: ' + t.to); }
   for (const g of le.grammar || []) {
     const n = (le.sentences || []).filter(s => s.gp === g.id).length + (le.drills || []).filter(d => d.gp === g.id).length;
     if (n < 2) throw new Error(le.id + ': il punto ' + g.id + ' ha meno di 2 esercizi');

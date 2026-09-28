@@ -1932,6 +1932,59 @@
          }
         }
        ],
+       "transforms": [
+        {
+         "gp": "ja-arimasen",
+         "task": "Volgi al negativo",
+         "from": "がくせいです。",
+         "to": [
+          "がくせいじゃありません",
+          "がくせいではありません"
+         ]
+        },
+        {
+         "gp": "ja-arimasen",
+         "task": "Volgi al negativo",
+         "from": "いしゃです。",
+         "to": [
+          "いしゃじゃありません",
+          "いしゃではありません"
+         ]
+        },
+        {
+         "gp": "ja-arimasen",
+         "task": "Volgi al negativo",
+         "from": "にほんじんです。",
+         "to": [
+          "にほんじんじゃありません",
+          "にほんじんではありません"
+         ]
+        },
+        {
+         "gp": "ka",
+         "task": "Trasforma in domanda",
+         "from": "せんせいです。",
+         "to": [
+          "せんせいですか"
+         ]
+        },
+        {
+         "gp": "ka",
+         "task": "Trasforma in domanda",
+         "from": "たなかさんは かいしゃいんです。",
+         "to": [
+          "たなかさんはかいしゃいんですか"
+         ]
+        },
+        {
+         "gp": "wa-desu",
+         "task": "Scrivi in giapponese: «Io sono italiano.»",
+         "from": "",
+         "to": [
+          "わたしはイタリアじんです"
+         ]
+        }
+       ],
        "drills": [
         {
          "gp": "ja-arimasen",
@@ -2176,6 +2229,32 @@
          }
         }
        ],
+       "transforms": [
+        {
+         "gp": "no",
+         "task": "Unisci con の: «il mio libro»",
+         "from": "わたし ／ ほん",
+         "to": [
+          "わたしのほん"
+         ]
+        },
+        {
+         "gp": "no",
+         "task": "Unisci con の: «l'ombrello dell'insegnante»",
+         "from": "せんせい ／ かさ",
+         "to": [
+          "せんせいのかさ"
+         ]
+        },
+        {
+         "gp": "kosoa",
+         "task": "Scrivi in giapponese: «Che cos'è quello laggiù?»",
+         "from": "",
+         "to": [
+          "あれはなんですか"
+         ]
+        }
+       ],
        "drills": [
         {
          "gp": "kosoa",
@@ -2369,6 +2448,57 @@
          ],
          "gp": "numeri",
          "build": "Componi il numero 120"
+        }
+       ],
+       "transforms": [
+        {
+         "gp": "numeri",
+         "task": "Scrivi il numero in giapponese",
+         "from": "23",
+         "to": [
+          "にじゅうさん"
+         ]
+        },
+        {
+         "gp": "numeri",
+         "task": "Scrivi il numero in giapponese",
+         "from": "48",
+         "to": [
+          "よんじゅうはち"
+         ]
+        },
+        {
+         "gp": "numeri",
+         "task": "Scrivi il numero in giapponese",
+         "from": "16",
+         "to": [
+          "じゅうろく"
+         ]
+        },
+        {
+         "gp": "numeri",
+         "task": "Scrivi il numero in giapponese",
+         "from": "99",
+         "to": [
+          "きゅうじゅうきゅう"
+         ]
+        },
+        {
+         "gp": "numeri",
+         "task": "Scrivi il numero in giapponese",
+         "from": "300",
+         "to": [
+          "さんびゃく"
+         ]
+        },
+        {
+         "gp": "numeri",
+         "task": "Scrivi il numero in giapponese",
+         "from": "71",
+         "to": [
+          "ななじゅういち",
+          "しちじゅういち"
+         ]
         }
        ],
        "drills": [
@@ -2656,6 +2786,80 @@
            "きのう",
            "よみませんでした"
           ]
+         ]
+        }
+       ],
+       "transforms": [
+        {
+         "gp": "masu",
+         "task": "Volgi al passato",
+         "from": "たべます",
+         "to": [
+          "たべました"
+         ]
+        },
+        {
+         "gp": "masu",
+         "task": "Volgi al negativo",
+         "from": "のみます",
+         "to": [
+          "のみません"
+         ]
+        },
+        {
+         "gp": "masu",
+         "task": "Volgi al passato negativo",
+         "from": "いきます",
+         "to": [
+          "いきませんでした"
+         ]
+        },
+        {
+         "gp": "masu",
+         "task": "Volgi al passato",
+         "from": "みます",
+         "to": [
+          "みました"
+         ]
+        },
+        {
+         "gp": "masu",
+         "task": "Volgi al negativo",
+         "from": "きます",
+         "to": [
+          "きません"
+         ]
+        },
+        {
+         "gp": "masu",
+         "task": "Volgi al passato",
+         "from": "かえります",
+         "to": [
+          "かえりました"
+         ]
+        },
+        {
+         "gp": "masu",
+         "task": "Volgi al passato negativo",
+         "from": "します",
+         "to": [
+          "しませんでした"
+         ]
+        },
+        {
+         "gp": "o",
+         "task": "Scrivi in giapponese: «Bevo acqua.»",
+         "from": "みず ／ のみます",
+         "to": [
+          "みずをのみます"
+         ]
+        },
+        {
+         "gp": "o",
+         "task": "Scrivi in giapponese: «Leggo un libro.»",
+         "from": "ほん ／ よみます",
+         "to": [
+          "ほんをよみます"
          ]
         }
        ],
@@ -2972,6 +3176,42 @@
          ]
         }
        ],
+       "transforms": [
+        {
+         "gp": "ni",
+         "task": "Scrivi in giapponese: «Vado a scuola.»",
+         "from": "がっこう ／ いきます",
+         "to": [
+          "がっこうにいきます",
+          "がっこうへいきます"
+         ]
+        },
+        {
+         "gp": "de",
+         "task": "Scrivi in giapponese: «Vado in autobus.»",
+         "from": "バス ／ いきます",
+         "to": [
+          "バスでいきます"
+         ]
+        },
+        {
+         "gp": "de",
+         "task": "Scrivi in giapponese: «Leggo in biblioteca.»",
+         "from": "としょかん ／ よみます",
+         "to": [
+          "としょかんでよみます"
+         ]
+        },
+        {
+         "gp": "e",
+         "task": "Scrivi in giapponese: «Torno a casa.»",
+         "from": "うち ／ かえります",
+         "to": [
+          "うちへかえります",
+          "うちにかえります"
+         ]
+        }
+       ],
        "drills": [
         {
          "gp": "e",
@@ -3195,6 +3435,69 @@
           "です"
          ],
          "gp": "i-adj"
+        }
+       ],
+       "transforms": [
+        {
+         "gp": "i-adj",
+         "task": "Volgi al negativo",
+         "from": "たかいです。",
+         "to": [
+          "たかくないです",
+          "たかくありません"
+         ]
+        },
+        {
+         "gp": "i-adj",
+         "task": "Volgi al negativo",
+         "from": "おおきいです。",
+         "to": [
+          "おおきくないです",
+          "おおきくありません"
+         ]
+        },
+        {
+         "gp": "i-adj",
+         "task": "Volgi al negativo",
+         "from": "おもしろいです。",
+         "to": [
+          "おもしろくないです",
+          "おもしろくありません"
+         ]
+        },
+        {
+         "gp": "na-adj",
+         "task": "Volgi al negativo",
+         "from": "しずかです。",
+         "to": [
+          "しずかじゃありません",
+          "しずかではありません"
+         ]
+        },
+        {
+         "gp": "na-adj",
+         "task": "Volgi al negativo",
+         "from": "げんきです。",
+         "to": [
+          "げんきじゃありません",
+          "げんきではありません"
+         ]
+        },
+        {
+         "gp": "na-adj",
+         "task": "Unisci aggettivo e nome: «un bel fiore»",
+         "from": "きれい ／ はな",
+         "to": [
+          "きれいなはな"
+         ]
+        },
+        {
+         "gp": "i-adj",
+         "task": "Unisci aggettivo e nome: «una macchina piccola»",
+         "from": "ちいさい ／ くるま",
+         "to": [
+          "ちいさいくるま"
+         ]
         }
        ],
        "drills": [
