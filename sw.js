@@ -1,5 +1,5 @@
 // Sillabario service worker: funziona offline e prende sempre la versione più recente quando c'è rete.
-const CACHE = 'sillabario-v7';
+const CACHE = 'sillabario-v9';
 const CORE = ['./', './index.html', './app.js', './courses.json', './ja.json', './strokes.json', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

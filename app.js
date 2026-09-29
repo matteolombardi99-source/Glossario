@@ -3,7 +3,7 @@
    Stato salvato in localStorage (chiave LS_KEY); la sincronizzazione remota si aggancia a Store. */
 'use strict';
 
-const APP_VERSION = '2.3';
+const APP_VERSION = '2.4.1';
 const LS_KEY = 'sillabario.v2';
 const DAY = 864e5;
 const $app = document.getElementById('app');
@@ -71,6 +71,12 @@ const kataToHira = s => s.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charC
 const hiraToKata = s => s.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
 const isKata = s => /^[゠-ヿー]+$/.test(s);
 const normKana = s => kataToHira(String(s)).replace(/[\s、。・,.!?！？「」]/g, '');
+// vocali lunghe dei katakana: per le parole con ー si accettano anche le grafie digitate "noto", "nooto", "nouto"
+const VOWEL = (() => { const m = {}; const rows = { a: 'あかさたなはまやらわがざだばぱゃぁ', i: 'いきしちにひみりぎじぢびぴぃ', u: 'うくすつぬふむゆるぐずづぶぷゅぅ', e: 'えけせてねへめれげぜでべぺぇ', o: 'おこそとのほもよろをごぞどぼぽょぉ' }; for (const v in rows) for (const c of rows[v]) m[c] = v; return m; })();
+const LONGV = { a: 'あ', i: 'い', u: 'う', e: 'えい', o: 'おう' };
+const longKey = s => { let out = '', pv = null; for (const c of s) { if (pv && (c === 'ー' || LONGV[pv].includes(c))) { out += ':'; continue; } out += c; pv = VOWEL[c] || null; } return out; };
+const kataLoose = s => longKey(s.replace(/てぃ/g, 'ち').replace(/でぃ/g, 'ぢ'));
+const kanaEq = (answer, got) => { const a = normKana(answer); if (a === got) return true; return /[ァ-ヶー]/.test(answer) && kataLoose(a) === kataLoose(got); };
 function inputToKana(raw, final = true) { return /[a-z]/i.test(raw) ? toHira(raw, final) : raw; }
 function normRoma(s) {
   return String(s).trim().toLowerCase().replace(/\s+/g, '').replace(/([aiueo])[-ー]/g, '$1$1').replace(/[.,!?'’-]/g, '')
@@ -199,6 +205,9 @@ function indexCourse(c) {
         (le.kana || []).forEach(k => add(le, { id: 'k:' + k.k, kind: 'kana', k: k.k, r: k.r, alt: k.alt, script: le.script }));
         (le.words || []).forEach(w => add(le, { id: (w.role === 'read' ? 'r:' : 'w:') + w.jp, kind: 'word', ...w }));
         (le.kanji || []).forEach(k => add(le, { id: 'j:' + k.k, kind: 'kanji', ...k }));
+        (le.vocabq || []).forEach((v, i) => add(le, { id: 'vq:' + le.id + '#' + i, kind: 'vq', ...v }));
+        (le.readings || []).forEach((r, i) => add(le, { id: 'rd:' + le.id + '#' + i, kind: 'reading', ...r }));
+        (le.listening || []).forEach((r, i) => add(le, { id: 'ls:' + le.id + '#' + i, kind: 'listen', ...r }));
         (le.grammar || []).forEach(g => add(le, { id: 'g:' + g.id, kind: 'grammar', gid: g.id, title: g.title, it: g.it,
           sentences: (le.sentences || []).filter(s => s.gp === g.id), drills: (le.drills || []).filter(d => d.gp === g.id), transforms: (le.transforms || []).filter(t => t.gp === g.id) }));
       }
@@ -212,6 +221,9 @@ function itemLabel(it) {
   if (it.kind === 'kana') return it.k + ' · ' + it.r;
   if (it.kind === 'word') return it.jp + ' · ' + it.it;
   if (it.kind === 'kanji') return it.k + ' · ' + it.it;
+  if (it.kind === 'reading') return 'Lettura: ' + it.title;
+  if (it.kind === 'listen') return 'Ascolto: ' + (it.title || it.q);
+  if (it.kind === 'vq') return it.q;
   return it.title;
 }
 function showRomaji(level) { const m = S.settings.romaji; return m === 'always' || (m === 'auto' && level && level.id === 'L0'); }
@@ -247,7 +259,8 @@ function stageForCard(c) { if (c.reps <= 1) return pickOne([0, 1]); if (c.reps <
 
 /* ============================== progressione ============================== */
 const passedLesson = le => prog().lessons[le.id] && prog().lessons[le.id].best != null;
-const practiced = le => !!(prog().lessons[le.id] && prog().lessons[le.id].practice);
+const partDone = (le, part) => { const L = prog().lessons[le.id]; return !!(L && (L.practice || (L.parts && L.parts[part]))); };
+const practiced = le => { const L = prog().lessons[le.id]; return !!(L && (L.practice || lessonParts(le).every(p => L.parts && L.parts[p]))); };
 const passedChapter = ch => prog().chapters[ch.id] != null;
 const passedExam = l => prog().exams[l.id] != null;
 function lessonUnlocked(le) {
@@ -305,9 +318,9 @@ const NVOICES = [['ja-JP-NanamiNeural', 'Nanami (femminile)'], ['ja-JP-KeitaNeur
 const Neural = {
   mem: new Map(), cur: null, cacheName: 'sillabario-audio-v1',
   on() { return !!Sync.cfg() && S.settings.voiceSrc !== 'device'; },
-  url(text) { const c = Sync.cfg(); return Sync.base(c) + '/tts?t=' + encodeURIComponent(text) + '&v=' + encodeURIComponent(S.settings.nvoice || NVOICES[0][0]) + '&r=' + (S.settings.rate <= 0.8 ? 'slow' : 'normal'); },
-  async bytes(text) {
-    const url = this.url(text); let cache = null;
+  url(text, v) { const c = Sync.cfg(); return Sync.base(c) + '/tts?t=' + encodeURIComponent(text) + '&v=' + encodeURIComponent(v || S.settings.nvoice || NVOICES[0][0]) + '&r=' + (S.settings.rate <= 0.8 ? 'slow' : 'normal'); },
+  async bytes(text, v) {
+    const url = this.url(text, v); let cache = null;
     try { cache = await caches.open(this.cacheName); const hit = await cache.match(url); if (hit) return await hit.arrayBuffer(); } catch (e) { cache = null; }
     const r = await fetch(url, { headers: { Authorization: 'Bearer ' + Sync.cfg().code } });
     if (!r.ok) throw new Error('tts ' + r.status);
@@ -316,13 +329,13 @@ const Neural = {
     return ab;
   },
   decode(c, ab) { return new Promise((res, rej) => { const p = c.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); },
-  async buffer(text) {
-    const key = this.url(text); if (this.mem.has(key)) return this.mem.get(key);
+  async buffer(text, v) {
+    const key = this.url(text, v); if (this.mem.has(key)) return this.mem.get(key);
     const c = audioCtx(); if (!c) throw new Error('audio');
-    const b = await this.decode(c, await this.bytes(text)); this.mem.set(key, b); return b;
+    const b = await this.decode(c, await this.bytes(text, v)); this.mem.set(key, b); return b;
   },
-  async play(text) {
-    const c = audioCtx(); const b = await this.buffer(text);
+  async play(text, v) {
+    const c = audioCtx(); const b = await this.buffer(text, v);
     this.stop(); const src = c.createBufferSource(); src.buffer = b; src.connect(c.destination); src.start(); this.cur = src;
     return new Promise(res => { src.onended = res; });
   },
@@ -339,6 +352,28 @@ function speak(text) {
   if (Neural.on()) { Neural.play(String(text).replace(/[＿_]/g, '')).catch(() => speakDevice(text)); return; }
   speakDevice(text);
 }
+// dialoghi: una voce per personaggio (F donna, M uomo), una battuta dopo l'altra
+let DLG = 0;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function speakDeviceAsync(text, pitch) {
+  return new Promise(res => {
+    if (!('speechSynthesis' in window)) return res();
+    try { const u = new SpeechSynthesisUtterance(text); u.lang = COURSE.tts; u.rate = S.settings.rate; if (pitch) u.pitch = pitch; const v = voice(); if (v) u.voice = v; u.onend = res; u.onerror = res; speechSynthesis.speak(u); setTimeout(res, 20000); } catch (e) { res(); }
+  });
+}
+async function playDialog(lines, onLine) {
+  const token = ++DLG; Neural.stop(); try { speechSynthesis.cancel(); } catch (e) { }
+  for (let i = 0; i < lines.length; i++) {
+    if (DLG !== token) return false;
+    const [sp, t] = lines[i]; onLine && onLine(i);
+    const v = sp === 'M' ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
+    if (Neural.on()) { try { await Neural.play(t, v); } catch (e) { await speakDeviceAsync(t, sp === 'M' ? 0.8 : 1.1); } }
+    else await speakDeviceAsync(t, sp === 'M' ? 0.8 : 1.1);
+    await sleep(380);
+  }
+  onLine && onLine(-1); return true;
+}
+function stopDialog() { DLG++; Neural.stop(); try { speechSynthesis.cancel(); } catch (e) { } }
 function speakDevice(text) {
   if (!('speechSynthesis' in window) || !text) return;
   try {
@@ -477,7 +512,37 @@ function kanaPool(it) {
 const wordPool = role => Object.values(IDX.items).filter(x => x.kind === 'word' && x.role === role);
 const kanjiPool = () => Object.values(IDX.items).filter(x => x.kind === 'kanji');
 function kanjiReadings(k) { return [...k.on, ...k.kun]; }
-function kanjiSol(k) { return { jp: k.k, r: 'on ' + k.on.join('・') + ' · kun ' + k.kun.join('・'), it: k.it }; }
+function kanjiSol(k) { return { jp: k.k, r: 'on ' + k.on.join('・') + (k.kun.length ? ' · kun ' + k.kun.join('・') : ''), it: k.it }; }
+
+const DAKU = { か: 'が', き: 'ぎ', く: 'ぐ', け: 'げ', こ: 'ご', さ: 'ざ', し: 'じ', す: 'ず', せ: 'ぜ', そ: 'ぞ', た: 'だ', ち: 'ぢ', つ: 'づ', て: 'で', と: 'ど', は: 'ば', ひ: 'び', ふ: 'ぶ', へ: 'べ', ほ: 'ぼ' };
+const UNDAKU = Object.fromEntries(Object.entries(DAKU).map(([a, b]) => [b, a]));
+Object.assign(UNDAKU, { ぱ: 'ば', ぴ: 'び', ぷ: 'ぶ', ぺ: 'べ', ぽ: 'ぼ' });
+const O_ROW = 'おこそとのほもよろごぞどぼぽょ';
+// Letture sbagliate plausibili, come nelle domande JLPT di lettura dei kanji: sonorità, vocali lunghe, consonanti doppie
+function readingVariants(k) {
+  const c = [...k]; const out = new Set();
+  const put = arr => { const v = arr.join(''); if (v !== k && v.length >= 2) out.add(v); };
+  c.forEach((x, i) => {
+    if (DAKU[x]) put([...c.slice(0, i), DAKU[x], ...c.slice(i + 1)]);
+    if (UNDAKU[x]) put([...c.slice(0, i), UNDAKU[x], ...c.slice(i + 1)]);
+    if (x === 'う' && i > 0 && O_ROW.includes(c[i - 1])) put([...c.slice(0, i), ...c.slice(i + 1)]);
+    if (O_ROW.includes(x) && c[i + 1] !== 'う' && i < c.length - 1) put([...c.slice(0, i + 1), 'う', ...c.slice(i + 1)]);
+    if (x === 'っ') put([...c.slice(0, i), ...c.slice(i + 1)]);
+    if (i < c.length - 1 && /[かきくけこさしすせそたちつてとぱぴぷぺぽ]/.test(c[i + 1]) && x !== 'っ' && c[i + 1] !== 'っ' && !'ゃゅょ'.includes(x)) put([...c.slice(0, i + 1), 'っ', ...c.slice(i + 1)]);
+    if ('ゃゅょ'.includes(x)) put([...c.slice(0, i), { ゃ: 'や', ゅ: 'ゆ', ょ: 'よ' }[x], ...c.slice(i + 1)]);
+  });
+  return shuffle([...out]);
+}
+// Scritture sbagliate plausibili: un kanji sostituito con uno simile (dati Kanjium) o con un altro kanji del corso
+function orthoVariants(jp) {
+  const L = (COURSE && COURSE.looks) || {}; const c = [...jp]; const out = new Set();
+  const all = Object.values(IDX.items).filter(x => x.kind === 'kanji').map(x => x.k);
+  c.forEach((x, i) => { if (/[一-鿿]/.test(x)) (L[x] || []).forEach(y => out.add([...c.slice(0, i), y, ...c.slice(i + 1)].join(''))); });
+  let guard = 0;
+  while (out.size < 3 && guard++ < 50) { const i = c.findIndex(x => /[一-鿿]/.test(x)); if (i < 0) break; const j = pickOne(c.map((x, k) => /[一-鿿]/.test(x) ? k : -1).filter(k => k >= 0)); out.add([...c.slice(0, j), pickOne(all), ...c.slice(j + 1)].join('')); }
+  out.delete(jp); return shuffle([...out]);
+}
+const hasKanji = s => /[一-鿿]/.test(s);
 
 function grammarTemplates(g) {
   const T = [];
@@ -489,6 +554,16 @@ function grammarTemplates(g) {
       const tokPool = Object.values(IDX.items).filter(x => x.kind === 'grammar' && x.lesson.level === g.lesson.level).flatMap(x => x.sentences.flatMap(y => y.tokens));
       const extra = shuffle(uniq(tokPool.filter(t => !s.tokens.includes(t)))).slice(0, s.tokens.length > 4 ? 3 : 2);
       return { type: 'build', prompt: s.build || 'Traduci in giapponese', sub: s.build ? null : s.it, tokens: s.tokens, orders: [s.tokens, ...(s.alts || [])], bank: shuffle(s.tokens.concat(extra)), sayAfter: s.jp, sol: { jp: s.jp, r: s.r, it: s.build ? null : s.it } };
+    } });
+  });
+  g.sentences.forEach((s, i) => {
+    if (s.build || (s.alts && s.alts.length) || s.tokens.length < 5) return;
+    T.push({ stage: 1, tid: g.id + '#s' + i, star: true, make: () => {
+      const n = s.tokens.length; const starts = shuffle([...Array(n - 3).keys()]).filter(k => new Set(s.tokens.slice(k, k + 4)).size === 4);
+      if (!starts.length) return null;
+      const start = starts[0]; const win = s.tokens.slice(start, start + 4);
+      const shown = [...s.tokens.slice(0, start), '＿＿', '＿＿', '★', '＿＿', ...s.tokens.slice(start + 4)].join(' ');
+      return { type: 'mcq', prompt: 'Quale parola va al posto di ★?', sub: s.it, big: shown, bigKind: 'sent', options: shuffle(win), optKind: 'jp', answer: win[2], explain: 'Ordine corretto: ' + win.join(' '), sayAfter: s.jp, sol: { jp: s.jp, r: s.r } };
     } });
   });
   (g.transforms || []).forEach((t, i) => T.push({ stage: 2, tid: g.id + '#t' + i, make: () => ({ type: 'kana', prompt: t.task, big: t.from || null, bigKind: 'sent', answers: t.to, answer: t.to[0], kata: false, sayAfter: t.to[0], sol: { jp: t.to[0] } }) }));
@@ -536,9 +611,17 @@ function makeQ(it, stage, opt = {}) {
       : { type: 'mcq', prompt: 'Cosa significa?', big: it.jp, bigKind: 'word', say: it.jp, options: options(it.it, pool.map(x => x.it)), answer: it.it, sol };
     else if (listen && Math.random() < 0.4) q = { type: 'kana', prompt: 'Dettato: ascolta e scrivi la parola', audioOnly: it.jp, answers: [it.kana], answer: it.kana, kata: isKata(it.kana), sol };
     else q = { type: 'roma', prompt: 'Scrivi la lettura in lettere latine', big: it.jp, bigKind: 'word', say: it.jp, answers: [it.r], answer: it.r, placeholder: 'lettura', sol };
+  } else if (it.kind === 'word' && hasKanji(it.jp) && it.kana.length >= 2 && (opt.form === 'kread' || opt.form === 'ortho' || (stage === 1 && Math.random() < 0.5))) {
+    const sol = { jp: it.jp, r: it.kana + ' · ' + it.r, it: it.it };
+    const form = opt.form || pickOne(['kread', 'ortho']);
+    if (form === 'kread') { const v = readingVariants(it.kana).slice(0, 3); if (v.length < 3) v.push(...shuffle(uniq(wordPool('lang').map(x => x.kana).filter(x => x !== it.kana && !v.includes(x))).sort((a, b) => Math.abs(a.length - it.kana.length) - Math.abs(b.length - it.kana.length)).slice(0, 3 - v.length)));
+      q = { type: 'mcq', prompt: 'Come si legge la parola in kanji?', big: it.jp, bigKind: 'word', options: shuffle([it.kana, ...v.slice(0, 3)]), optKind: 'jp', answer: it.kana, sayAfter: it.jp, sol }; }
+    else { const v = orthoVariants(it.jp).slice(0, 3);
+      q = { type: 'mcq', prompt: 'Come si scrive in kanji?', big: it.kana, bigKind: 'word', sub: '«' + it.it + '»', options: shuffle([it.jp, ...v]), optKind: 'jp', answer: it.jp, sayAfter: it.jp, sol }; }
   } else if (it.kind === 'word') {
-    const pool = wordPool('lang'); const sol = { jp: it.jp, r: it.r, it: it.it };
-    if (stage === 0) q = { type: 'mcq', prompt: 'Cosa significa?', big: it.jp, bigKind: 'word', say: it.jp, romaji: it.r, options: options(it.it, pool.map(x => x.it)), answer: it.it, sol };
+    const pool = wordPool('lang').filter(x => x === it || (x.it !== it.it && x.kana !== it.kana)); /* niente sinonimi o doppie grafie tra le opzioni */ const sol = { jp: it.jp, r: it.jp !== it.kana ? it.kana + ' · ' + it.r : it.r, it: it.it };
+    if (stage === 2 && hasKanji(it.jp) && Math.random() < 0.3) q = { type: 'kana', prompt: 'Scrivi la lettura in kana', big: it.jp, bigKind: 'word', answers: [it.kana, ...(it.kanaAlts || [])], answer: it.kana, kata: isKata(it.kana), sayAfter: it.jp, sol };
+    else if (stage === 0) q = { type: 'mcq', prompt: 'Cosa significa?', big: it.jp, bigKind: 'word', say: it.jp, romaji: it.r, options: options(it.it, pool.map(x => x.it)), answer: it.it, sol };
     else if (stage === 1) q = listen && Math.random() < 0.35
       ? { type: 'mcq', prompt: 'Ascolta e scegli il significato', audioOnly: it.jp, options: options(it.it, pool.map(x => x.it)), answer: it.it, sol }
       : { type: 'mcq', prompt: 'Come si dice «' + it.it + '»?', options: options(it.jp, pool.map(x => x.jp)), optKind: 'jp', answer: it.jp, sol };
@@ -549,18 +632,33 @@ function makeQ(it, stage, opt = {}) {
     if (stage === 0) q = { type: 'mcq', prompt: 'Cosa significa questo kanji?', big: it.k, bigKind: 'glyph', options: options(it.it, pool.map(x => x.it)), answer: it.it, sol };
     else if (stage === 1) q = Math.random() < 0.5
       ? { type: 'mcq', prompt: 'Quale kanji significa «' + it.it + '»?', options: options(it.k, pool.map(x => x.k)), optKind: 'g', answer: it.k, sol }
-      : { type: 'mcq', prompt: 'Qual è la lettura kun di questo kanji?', big: it.k, bigKind: 'glyph', options: options(it.kun[0], pool.filter(x => x.kun[0] !== it.kun[0]).map(x => x.kun[0])), optKind: 'jp', answer: it.kun[0], sayAfter: readingForms(it.kun[0])[0], sol };
+      : (() => { const main = k => k.kun[0] || k.on[0]; const m = main(it); return { type: 'mcq', prompt: it.kun.length ? 'Qual è la lettura kun di questo kanji?' : 'Qual è la lettura on di questo kanji?', big: it.k, bigKind: 'glyph', options: options(m, pool.filter(x => main(x) !== m && readingForms(main(x))[0] !== readingForms(m)[0]).map(main)), optKind: 'jp', answer: m, sayAfter: readingForms(m)[0], sol }; })();
     else if (opt.trace === true || (opt.trace !== false && hasStrokes(it.k) && Math.random() < 0.35)) q = traceQ(it.k, it.it, !!opt.guided, sol);
     else q = { type: 'kana', prompt: 'Scrivi una lettura di questo kanji', sub: 'va bene sia on sia kun', big: it.k, bigKind: 'glyph', answers: kanjiReadings(it).flatMap(readingForms), answer: kanjiReadings(it).join('・'), sol };
+  } else if (it.kind === 'vq') {
+    q = it.type === 'para'
+      ? { type: 'mcq', prompt: 'Quale frase ha quasi lo stesso significato?', big: it.q, bigKind: 'sent', options: shuffle(it.o), optKind: 'jp', answer: it.a, explain: it.ex, long: true, sol: { jp: it.a } }
+      : { type: 'mcq', prompt: 'Quale parola completa la frase?', big: it.q, bigKind: 'sent', options: shuffle(it.o), optKind: 'jp', answer: it.a, explain: it.ex, sayAfter: it.q.replace('＿＿', it.a), sol: { jp: it.q.replace('＿＿', it.a) } };
+  } else if (it.kind === 'reading') {
+    const qq = pickOne(it.questions);
+    q = { type: 'mcq', prompt: qq.q, passage: it.text, passageTitle: it.title, options: shuffle(qq.o), optKind: /[぀-ヿ一-鿿]/.test(qq.a) ? 'jp' : null, answer: qq.a, explain: qq.ex, long: true, translation: it.it, sol: {} };
+  } else if (it.kind === 'listen') {
+    q = { type: 'mcq', prompt: it.q, sub: it.setup, dialog: it.lines, options: shuffle(it.o), optKind: /[぀-ヿ一-鿿]/.test(it.a) ? 'jp' : null, answer: it.a, explain: it.ex, long: it.o.some(x => x.length > 10), translation: it.it, sol: {} };
+    if (!listen) q.noAudio = true;
   } else if (it.kind === 'grammar') {
     const T = grammarTemplates(it).filter(t => !(opt.used && opt.used.has(t.tid)));
     if (!T.length) return null;
     let cand = T.filter(t => t.stage === stage);
     if (!cand.length) cand = T.filter(t => Math.abs(t.stage - stage) === 1);
     if (!cand.length) cand = T;
-    const t = pickOne(cand);
+    if (opt.form === 'star') cand = T.filter(t => t.star);
+    else if (opt.form === 'gram') cand = T.filter(t => t.stage === 1 && !t.star);
+    if (!cand.length) return null;
+    let t = null, made = null;
+    for (const c of shuffle(cand)) { made = c.make(); if (made) { t = c; break; } }
+    if (!made) return null;
     if (opt.used) opt.used.add(t.tid);
-    q = Object.assign(t.make(), { tid: t.tid, stage: t.stage });
+    q = Object.assign(made, { tid: t.tid, stage: t.stage });
   }
   if (!q) return null;
   q.item = it.id; q.stage = q.stage != null ? q.stage : stage; q.level = lv; q.tid = q.tid || it.id + '#' + stage;
@@ -569,13 +667,28 @@ function makeQ(it, stage, opt = {}) {
 
 /* ============================== sessioni ============================== */
 function lessonItems(le) { return le.itemIds.map(item); }
-function buildPractice(le) {
-  const its = lessonItems(le); const used = new Set();
-  const plain = its.filter(i => i.kind !== 'grammar'), gram = its.filter(i => i.kind === 'grammar');
-  const A = shuffle(plain).map(i => makeQ(i, 0));
+const PART_NAMES = { all: 'Esercizi guidati', vocab: 'Vocabolario', chars: 'Caratteri e kanji', grammar: 'Grammatica, letture e ascolti' };
+function lessonParts(le) {
+  const its = lessonItems(le);
+  if (its.length <= 24) return ['all'];
+  const g = { vocab: its.filter(i => i.kind === 'word'), chars: its.filter(i => i.kind === 'kana' || i.kind === 'kanji'), grammar: its.filter(i => ['grammar', 'vq', 'reading', 'listen'].includes(i.kind)) };
+  return ['vocab', 'chars', 'grammar'].filter(k => g[k].length);
+}
+function partItems(le, part) {
+  const its = lessonItems(le); if (part === 'all' || !part) return its;
+  if (part === 'vocab') return its.filter(i => i.kind === 'word');
+  if (part === 'chars') return its.filter(i => i.kind === 'kana' || i.kind === 'kanji');
+  return its.filter(i => ['grammar', 'vq', 'reading', 'listen'].includes(i.kind));
+}
+function buildPractice(le, part) {
+  const its = partItems(le, part); const used = new Set();
+  const plain = its.filter(i => !['grammar', 'vq', 'reading', 'listen'].includes(i.kind)), gram = its.filter(i => i.kind === 'grammar');
+  const extra = its.filter(i => ['vq', 'reading', 'listen'].includes(i.kind));
+  const A = shuffle(plain).map(i => makeQ(i, 0)).concat(shuffle(extra).map(i => makeQ(i, 1)));
   const traceable = plain.filter(i => (i.kind === 'kana' || i.kind === 'kanji') && hasStrokes(i.k));
   const TR = shuffle(traceable).slice(0, 6).map(i => makeQ(i, 2, { trace: true, guided: true }));
   const M = plain.length >= 4 ? [matchQ(plain)] : [];
+  if (plain.length > 16) M.push(matchQ(plain));
   const B = [];
   gram.forEach(g => { for (let k = 0; k < 4; k++) { const q = makeQ(g, k < 1 ? 0 : k < 3 ? 1 : 2, { used }); if (q) B.push(q); } });
   shuffle(plain).forEach(i => B.push(makeQ(i, 1)));
@@ -587,12 +700,19 @@ function buildPractice(le) {
 }
 function buildVerify(le) {
   const its = lessonItems(le); const used = new Set(); const qs = [];
+  const long = its.length > 36;   // lezioni molto ricche: una domanda per punto grammaticale, così la verifica resta sulle 45 domande
   its.forEach(i => {
-    if (i.kind === 'grammar') { [1, 2].forEach(st => { const q = makeQ(i, st, { used, noListen: !Neural.on() }); if (q) qs.push(q); }); }
+    if (i.kind === 'grammar') { (long ? [pickOne([1, 2])] : [1, 2]).forEach(st => { const q = makeQ(i, st, { used, noListen: !Neural.on() }); if (q) qs.push(q); }); }
     else if (i.kind === 'word' && i.role === 'read') qs.push(makeQ(i, pickOne([1, 2]), { noListen: !Neural.on() }));
     else qs.push(makeQ(i, pickOne([1, 2]), { noListen: !Neural.on() }));
   });
-  return shuffle(qs.filter(Boolean));
+  // tetto di 45 domande: grammatica, kanji, letture e ascolti restano tutti, il vocabolario si campiona (le parole entrano comunque nei ripassi)
+  const all = qs.filter(Boolean), MAX = 45;
+  if (all.length > MAX) {
+    const isW = q => /^w:/.test(q.item || ''); const keep = all.filter(q => !isW(q)); const words = shuffle(all.filter(isW));
+    return shuffle(keep.concat(words.slice(0, Math.max(12, MAX - keep.length))));
+  }
+  return shuffle(all);
 }
 function sampleAcross(groups, n) {
   // prende n elementi distribuendoli tra i gruppi (per esempio le lezioni di un capitolo)
@@ -629,9 +749,50 @@ function placementGroup(le) {
 }
 
 let SES = null; // sessione in corso
+/* ============================== simulazione d'esame JLPT ============================== */
+// Formato ufficiale (jlpt.jp): tre sezioni a tempo, punteggio lingua e lettura 0–120, ascolto 0–60, soglie minime per sezione.
+function buildJLPT(l) {
+  const its = l.chapters.flatMap(ch => ch.lessons.flatMap(lessonItems));
+  const cfg = l.exam; const used = new Set(); const nn = x => x.filter(Boolean);
+  const kw = shuffle(its.filter(i => i.kind === 'word' && i.role === 'lang' && hasKanji(i.jp) && i.kana.length >= 2));
+  const A = nn([
+    ...kw.slice(0, 12).map(i => Object.assign(makeQ(i, 1, { form: 'kread' }), { mondai: 'Lettura dei kanji' })),
+    ...kw.slice(12, 20).map(i => Object.assign(makeQ(i, 1, { form: 'ortho' }), { mondai: 'Scrittura' })),
+    ...shuffle(its.filter(i => i.kind === 'vq' && i.type !== 'para')).slice(0, 10).map(i => Object.assign(makeQ(i, 1), { mondai: 'Parola nel contesto' })),
+    ...shuffle(its.filter(i => i.kind === 'vq' && i.type === 'para')).slice(0, 5).map(i => Object.assign(makeQ(i, 1), { mondai: 'Parafrasi' }))]);
+  const gram = its.filter(i => i.kind === 'grammar');
+  const G = []; for (let k = 0; k < 60 && G.length < 16; k++) { const q = makeQ(pickOne(gram), 1, { form: 'gram', used }); if (q) G.push(Object.assign(q, { mondai: 'Grammatica' })); }
+  const ST = []; for (let k = 0; k < 60 && ST.length < 5; k++) { const q = makeQ(pickOne(gram), 1, { form: 'star', used }); if (q) ST.push(Object.assign(q, { mondai: 'Composizione della frase' })); }
+  const B = nn([...G, ...ST, ...shuffle(its.filter(i => i.kind === 'reading')).slice(0, 4).map(i => Object.assign(makeQ(i, 1), { mondai: 'Comprensione del testo' }))]);
+  const C = nn(shuffle(its.filter(i => i.kind === 'listen')).slice(0, 16).map(i => Object.assign(makeQ(i, 1), { mondai: 'Ascolto' })));
+  const secs = [
+    { key: 'A', name: 'Lingua: vocabolario', jp: '文字・語彙', minutes: cfg.minutes[0], qs: A },
+    { key: 'B', name: 'Lingua: grammatica e lettura', jp: '文法・読解', minutes: cfg.minutes[1], qs: B },
+    { key: 'C', name: 'Ascolto', jp: '聴解', minutes: cfg.minutes[2], qs: C }].filter(x => x.qs.length);
+  let start = 0; secs.forEach((x, k) => { x.start = start; x.end = start + x.qs.length; start = x.end; x.qs.forEach(q => { q.section = x.key; }); });
+  return secs;
+}
+let JT = null;
+function stopTimer() { if (JT) clearInterval(JT); JT = null; }
+function fmtClock(ms) { const t = Math.max(0, Math.ceil(ms / 1000)); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); }
+function jlptTimeUp() {
+  const s = SES; if (!s || s.kind !== 'jlpt') return;
+  const sec = s.sections[s.sec];
+  for (let i = s.i; i < sec.end; i++) { const q = s.qs[i]; s.results.push({ q, ok: false, first: true, skipped: true }); }
+  s.i = sec.end; s.sec++; s.pause = true; stopTimer(); sfx('bad');
+  if (s.sec >= s.sections.length) return finishSession();
+  renderSession();
+}
 function startSession(kind, ctx = {}) {
+  if (kind === 'exam' && ctx.level && ctx.level.exam && ctx.level.exam.type === 'jlpt') kind = 'jlpt';
+  if (kind === 'jlpt') {
+    const sections = buildJLPT(ctx.level);
+    SES = { kind, title: 'Simulazione JLPT ' + ctx.level.code.replace('JLPT ', ''), qs: sections.flatMap(x => x.qs), sections, sec: 0, pause: true, i: 0, results: [], ctx, total: 0, t0: now() };
+    if (Neural.on()) Neural.prefetch(SES.qs.flatMap(q => (q.dialog || []).map(l => l[1])));
+    go({ screen: 'session' }); return;
+  }
   let qs, title;
-  if (kind === 'practice') { qs = buildPractice(ctx.le); title = 'Esercizi guidati · ' + ctx.le.title; }
+  if (kind === 'practice') { qs = buildPractice(ctx.le, ctx.part); title = (ctx.part && ctx.part !== 'all' ? PART_NAMES[ctx.part] : 'Esercizi guidati') + ' · ' + ctx.le.title; }
   else if (kind === 'verify') { qs = buildVerify(ctx.le); title = 'Verifica · ' + ctx.le.title; }
   else if (kind === 'chapter') { qs = buildChapter(ctx.ch); title = 'Test di capitolo · ' + ctx.ch.title; }
   else if (kind === 'exam') { qs = buildExam(ctx.level); title = 'Esame · ' + ctx.level.code; }
@@ -662,7 +823,7 @@ function grade(q, ok) {
   count(q.item, ok);
   if (first) {
     if (SES.kind === 'review') schedule(q.item, ok);
-    else if ((SES.kind === 'chapter' || SES.kind === 'exam') && inSRS(card(q.item))) schedule(q.item, ok);
+    else if ((SES.kind === 'chapter' || SES.kind === 'exam' || SES.kind === 'jlpt') && inSRS(card(q.item))) schedule(q.item, ok);
   }
   if (!ok && (SES.kind === 'practice' || SES.kind === 'review')) requeue(q);
   save();
@@ -672,7 +833,9 @@ function finishSession() {
   const s = SES; const p = prog(); const pct = scoreOf(s.results);
   const res = { kind: s.kind, pct, results: s.results, ctx: s.ctx, title: s.title, introduced: 0 };
   if (s.kind === 'practice') {
-    const L = p.lessons[s.ctx.le.id] || (p.lessons[s.ctx.le.id] = {}); L.practice = true; res.passed = true;
+    const L = p.lessons[s.ctx.le.id] || (p.lessons[s.ctx.le.id] = {});
+    const part = s.ctx.part || 'all'; if (part === 'all') L.practice = true; else { L.parts = L.parts || {}; L.parts[part] = true; }
+    res.passed = true;
   } else if (s.kind === 'verify') {
     res.passed = pct >= 80;
     if (res.passed) {
@@ -688,6 +851,22 @@ function finishSession() {
     res.passed = pct >= need; res.need = need;
     if (res.passed) p.exams[s.ctx.level.id] = typeof p.exams[s.ctx.level.id] === 'number' ? Math.max(p.exams[s.ctx.level.id], pct) : pct;
   } else if (s.kind === 'review') { res.passed = true; }
+  else if (s.kind === 'jlpt') {
+    stopTimer();
+    const cfg = s.ctx.level.exam;
+    const by = k => { const r = s.results.filter(x => x.q.section === k); return { ok: r.filter(x => x.ok).length, tot: s.sections.find(x => x.key === k) ? s.sections.find(x => x.key === k).qs.length : 0 }; };
+    const A = by('A'), B = by('B'), C = by('C');
+    const langTot = A.tot + B.tot;
+    res.lang = langTot ? Math.round((A.ok + B.ok) / langTot * 120) : 0;
+    res.listen = C.tot ? Math.round(C.ok / C.tot * 60) : 0;
+    res.total = res.lang + res.listen; res.secs = { A, B, C };
+    res.reasons = [];
+    if (res.total < cfg.pass) res.reasons.push('totale sotto ' + cfg.pass);
+    if (res.lang < cfg.minLang) res.reasons.push('lingua e lettura sotto il minimo di ' + cfg.minLang);
+    if (C.tot && res.listen < cfg.minListen) res.reasons.push('ascolto sotto il minimo di ' + cfg.minListen);
+    res.passed = !res.reasons.length; res.cfg = cfg; res.pct = Math.round(res.total / 180 * 100);
+    if (res.passed) p.exams[s.ctx.level.id] = typeof p.exams[s.ctx.level.id] === 'number' ? Math.max(p.exams[s.ctx.level.id], res.total) : res.total;
+  }
   save();
   SES = null;
   go({ screen: 'result', res });
@@ -755,6 +934,7 @@ function stepInfo(st) {
   if (!st) return null;
   if (st.kind === 'lesson') { const le = st.le; const n = le.chapter.lessons.indexOf(le) + 1; return { label: practiced(le) ? 'Verifica della lezione' : 'Prossima lezione', title: le.title, where: `${le.level.code} · ${le.chapter.title} · lezione ${n} di ${le.chapter.lessons.length}`, go: () => go({ screen: 'lesson', id: le.id }), glyph: le.glyph }; }
   if (st.kind === 'chapter') return { label: 'Test di capitolo', title: st.ch.title, where: `${st.ch.level.code} · ${st.ch.lessons.length} lezioni · soglia 80%`, go: () => startSession('chapter', { ch: st.ch }), glyph: '章' };
+  if (st.level.exam && st.level.exam.type === 'jlpt') return { label: 'Simulazione d\'esame', title: st.level.code + ' · formato ufficiale', where: '3 sezioni · ' + st.level.exam.minutes.reduce((a, b) => a + b, 0) + ' minuti · ' + st.level.exam.pass + '/180 per superarla', go: () => startSession('jlpt', { level: st.level }), glyph: '試験' };
   return { label: 'Esame di livello', title: st.level.code + ' · ' + st.level.title, where: `${(st.level.exam && st.level.exam.n) || 30} domande · soglia ${Math.round(((st.level.exam && st.level.exam.pass) || 0.8) * 100)}%`, go: () => startSession('exam', { level: st.level }), glyph: '試験' };
 }
 function relDue(t) {
@@ -813,7 +993,7 @@ function renderPath() {
       return `<div class="chapter"><h3 class="ch-title">${esc(ch.title)}</h3><ol class="path">${rows}${test}</ol></div>`;
     }).join('');
     const ep = passedExam(l), eu = examUnlocked(l), eb = p.exams[l.id];
-    const exam = `<ol class="path"><li class="u exam ${ep ? 'done' : eu ? 'current' : 'locked'}"><button data-exam="${l.id}" ${eu ? '' : 'aria-disabled="true"'}><span class="node">${ep ? '✓' : '試験'}</span><span><span class="u-title">Esame di livello${l.exam && l.exam.provisional ? ' (provvisorio)' : ''}</span><span class="u-meta">${ep ? (eb === 'P' ? 'superato al test d\'ingresso' : 'superato con ' + eb + '%') : ((l.exam && l.exam.n) || 30) + ' domande su tutto il livello · soglia 80%'}</span></span><span class="u-glyph"></span></button></li></ol>`;
+    const exam = `<ol class="path"><li class="u exam ${ep ? 'done' : eu ? 'current' : 'locked'}"><button data-exam="${l.id}" ${eu ? '' : 'aria-disabled="true"'}><span class="node">${ep ? '✓' : '試験'}</span><span><span class="u-title">${l.exam && l.exam.type === 'jlpt' ? 'Simulazione d\'esame ' + esc(l.code) : 'Esame di livello'}</span><span class="u-meta">${ep ? (eb === 'P' ? 'superato al test d\'ingresso' : l.exam && l.exam.type === 'jlpt' ? 'superata con ' + eb + '/180' : 'superato con ' + eb + '%') : l.exam && l.exam.type === 'jlpt' ? 'formato ufficiale · 3 sezioni a tempo · ' + l.exam.pass + '/180 e minimi di sezione' : ((l.exam && l.exam.n) || 30) + ' domande su tutto il livello · soglia 80%'}</span></span><span class="u-glyph"></span></button></li></ol>`;
     return `<section class="level"><div class="lvl-head"><span class="eyebrow">${esc(l.code)}</span><h2>${esc(l.title)}</h2><span class="count num">${done}/${all.length}<small>lezioni</small></span><p>${esc(l.desc || '')}</p><div class="meter"><i style="width:${all.length ? Math.round(done / all.length * 100) : 0}%"></i></div></div>${chs}${exam}</section>`;
   }).join('');
   $app.innerHTML = shell(`<header class="page-head"><span class="eyebrow">${esc(COURSE.native)}</span><h1>Percorso</h1></header>${lv}`, 'path');
@@ -831,13 +1011,17 @@ function renderLesson() {
   const n = le.chapter.lessons.indexOf(le) + 1;
   let blocks = '';
   if (le.grammar && le.grammar.length) blocks += `<div class="box"><h3>Schemi grammaticali</h3><div class="gram">${le.grammar.map(g => `<div class="gp"><span class="jp">${esc(g.title)}</span><span>${esc(g.it)}</span></div>`).join('')}</div></div>`;
-  if (le.kana) blocks += `<div class="box"><h3>Caratteri · tocca per ascoltare e vedere come si scrive</h3><div class="grid-k">${le.kana.map(k => `<button class="kcell" data-char="${esc(k.k)}" data-label="${esc(k.r)}" data-sayt="${esc(k.k)}"><span class="g">${esc(k.k)}</span><span class="r">${esc(k.r)}</span></button>`).join('')}</div></div>`;
-  if (le.kanji) blocks += `<div class="box"><h3>Kanji · tocca per ascoltare e vedere come si scrive</h3><div class="grid-j">${le.kanji.map(k => `<button class="jcell" data-char="${esc(k.k)}" data-label="${esc(k.it)}" data-sayt="${esc(readingForms(k.kun[0])[1])}"><span class="g">${esc(k.k)}</span><span class="m">${esc(k.it)}</span><span class="r"><i>on</i> ${esc(k.on.join('・'))}</span><span class="r"><i>kun</i> ${esc(k.kun.join('・'))}</span></button>`).join('')}</div></div>`;
+  if (le.kana && le.kana.length) blocks += `<div class="box"><h3>Caratteri · tocca per ascoltare e vedere come si scrive</h3><div class="grid-k">${le.kana.map(k => `<button class="kcell" data-char="${esc(k.k)}" data-label="${esc(k.r)}" data-sayt="${esc(k.k)}"><span class="g">${esc(k.k)}</span><span class="r">${esc(k.r)}</span></button>`).join('')}</div></div>`;
+  if (le.kanji && le.kanji.length) blocks += `<div class="box"><h3>Kanji · tocca per ascoltare e vedere come si scrive</h3><div class="grid-j">${le.kanji.map(k => `<button class="jcell" data-char="${esc(k.k)}" data-label="${esc(k.it)}" data-sayt="${esc(readingForms(k.kun[0] || k.on[0])[1])}"><span class="g">${esc(k.k)}</span><span class="m">${esc(k.it)}</span><span class="r"><i>on</i> ${esc(k.on.join('・'))}</span>${k.kun.length ? `<span class="r"><i>kun</i> ${esc(k.kun.join('・'))}</span>` : ''}</button>`).join('')}</div></div>`;
   const romaToggle = ro ? '' : '<button class="linkish small" data-roma>Mostra romaji</button>';
   const hasAcc = le.words && le.words.some(w => w.acc != null);
-  if (le.words) blocks += `<div class="box ${ro ? '' : 'hide-ro'}"><div class="box-h"><h3>${le.words[0].role === 'read' ? 'Parole da leggere' : 'Vocabolario'}</h3>${romaToggle}</div><div class="rows">${le.words.map(w => `<button class="row" data-say="${esc(w.jp)}"><span>${w.acc != null ? pitchSVG(w.kana, w.acc) : `<span class="j">${esc(w.jp)}</span>`}<span class="ro">${esc(w.r)}</span></span><span class="it">${esc(w.it)}</span></button>`).join('')}</div>
+  if (le.words) blocks += `<div class="box ${ro ? '' : 'hide-ro'}"><div class="box-h"><h3>${le.words[0].role === 'read' ? 'Parole da leggere' : 'Vocabolario'}</h3>${romaToggle}</div><div class="rows">${le.words.map(w => `<button class="row" data-say="${esc(w.jp)}"><span>${w.jp !== w.kana ? `<span class="j">${esc(w.jp)}</span>` : ''}${w.acc != null ? pitchSVG(w.kana, w.acc).replace('class="pitch"', w.jp !== w.kana ? 'class="pitch small"' : 'class="pitch"') : w.jp !== w.kana ? `<span class="kn jp">${esc(w.kana)}</span>` : `<span class="j">${esc(w.jp)}</span>`}<span class="ro">${esc(w.r)}</span></span><span class="it">${esc(w.it)}</span></button>`).join('')}</div>
     ${hasAcc ? `<details class="howto"><summary>Cosa indica la linea sopra le parole?</summary><p>Il giapponese non ha un accento di intensità come l'italiano, ma di <b>altezza</b>: ogni mora (sillaba) si pronuncia alta o bassa. La linea mostra questo andamento; il pallino vuoto finale indica l'altezza della particella che segue (per esempio が o は). Due parole possono distinguersi solo per l'accento: はし "ponte" e はし "bacchette". Nel dubbio, ascolta e imita.</p></details>` : ''}</div>`;
   if (le.sentences && le.sentences.length && !le.sentences[0].build) blocks += `<div class="box ${ro ? '' : 'hide-ro'}"><div class="box-h"><h3>Esempi</h3>${romaToggle}</div><div class="rows">${le.sentences.map(s => `<button class="row" data-say="${esc(s.jp)}"><span><span class="j">${esc(s.jp)}</span><span class="ro">${esc(s.r)}</span></span><span class="it">${esc(s.it)}</span></button>`).join('')}</div></div>`;
+  if (le.readings && le.readings.length) blocks += `<div class="box"><h3>Lettura</h3>${le.readings.map(r => `<div class="reading"><b>${esc(r.title)}</b><div class="ptext jp">${esc(r.text).replace(/\n/g, '<br>')}</div><details class="howto"><summary>Traduzione</summary><p>${esc(r.it)}</p></details></div>`).join('')}</div>`;
+  if (le.listening && le.listening.length) blocks += `<div class="box"><h3>Ascolto</h3>${le.listening.map((d, i) => `<div class="reading"><div class="lrow"><button class="say" data-dlg="${i}" aria-label="Ascolta il dialogo">${ICON_SAY}</button><span>${esc(d.title || d.setup || 'Dialogo')}</span></div><details class="howto"><summary>Trascrizione e traduzione</summary><div class="dlg jp">${d.lines.map(([sp, t]) => `<p><b>${{ F: 'Donna', M: 'Uomo', N: 'Voce' }[sp] || sp}</b> ${esc(t)}</p>`).join('')}</div><p>${esc(d.it || '')}</p></details></div>`).join('')}</div>`;
+  const parts = lessonParts(le);
+  const partBtns = parts.length > 1 ? `<div class="parts">${parts.map(p => `<button class="btn ${partDone(le, p) ? 'ghost' : ''}" data-part="${p}">${partDone(le, p) ? '✓ ' : ''}${PART_NAMES[p]}</button>`).join('')}</div>` : '';
   $app.innerHTML = shell(`
     <button class="back" id="back">← Percorso</button>
     <div class="t-head"><span class="eyebrow">${esc(le.level.code)} · ${esc(le.chapter.title)} · lezione ${n} di ${le.chapter.lessons.length}</span><h1>${esc(le.title)}</h1><div class="big">${esc(le.glyph)}</div></div>
@@ -846,33 +1030,56 @@ function renderLesson() {
     ${blocks}
     <h2 class="sec">Attività</h2>
     <ol class="steps">
-      <li class="step ${pr ? 'done' : 'current'}"><span class="node">${pr ? '✓' : '1'}</span><div><b>Esercizi guidati</b><span>Dal riconoscimento alla produzione. Gli errori tornano finché non li correggi. Non danno voto.</span></div><button class="btn ${pr ? 'ghost' : ''}" id="practice">${pr ? 'Ripeti' : 'Inizia'}</button></li>
-      <li class="step ${pd ? 'done' : pr ? 'current' : 'locked'}"><span class="node">${pd ? '✓' : '2'}</span><div><b>Verifica</b><span>${pd ? (L.best === 'P' ? 'Superata al test d\'ingresso.' : 'Superata con ' + L.best + '%.') : 'Una domanda su ogni elemento della lezione. Serve almeno l\'80%.'}${pd ? '' : ' Supera la verifica e gli elementi entrano nei ripassi.'}</span></div><button class="btn ${pd ? 'ghost' : ''}" id="verify" ${pr || pd ? '' : 'disabled'}>${pd ? 'Ripeti' : 'Inizia'}</button></li>
+      <li class="step ${pr ? 'done' : 'current'}"><span class="node">${pr ? '✓' : '1'}</span><div><b>Esercizi guidati</b><span>Dal riconoscimento alla produzione. Gli errori tornano finché non li correggi. Non danno voto.${parts.length > 1 ? ' La lezione è divisa in ' + parts.length + ' parti: completale tutte per sbloccare la verifica.' : ''}</span>${partBtns}</div>${parts.length > 1 ? '' : `<button class="btn ${pr ? 'ghost' : ''}" id="practice">${pr ? 'Ripeti' : 'Inizia'}</button>`}</li>
+      <li class="step ${pd ? 'done' : pr ? 'current' : 'locked'}"><span class="node">${pd ? '✓' : '2'}</span><div><b>Verifica</b><span>${pd ? (L.best === 'P' ? 'Superata al test d\'ingresso.' : 'Superata con ' + L.best + '%.') : 'Domande su tutta la lezione, al massimo 45. Serve almeno l\'80%.'}${pd ? '' : ' Supera la verifica e gli elementi entrano nei ripassi.'}</span></div><button class="btn ${pd ? 'ghost' : ''}" id="verify" ${pr || pd ? '' : 'disabled'}>${pd ? 'Ripeti' : 'Inizia'}</button></li>
       <li class="step ${L.speak != null ? 'done' : Sync.cfg() ? '' : 'locked'}"><span class="node">${L.speak != null ? '✓' : '3'}</span><div><b>Pronuncia</b><span>${Sync.cfg() ? (L.speak != null ? 'Punteggio migliore: ' + L.speak + '/100. ' : '') + 'Ripeti parole e frasi ad alta voce: ricevi un punteggio per ogni parola. Facoltativa, non blocca il percorso.' : 'Collega il tuo server nelle Impostazioni per attivare la valutazione della pronuncia.'}</span></div><button class="btn ghost" id="speakbtn" ${Sync.cfg() && speakItems(le).length ? '' : 'disabled'}>${L.speak != null ? 'Ripeti' : 'Inizia'}</button></li>
     </ol>`, 'path');
   bindShell(); bindSay();
   $app.querySelectorAll('[data-char]').forEach(b => b.onclick = () => { if (hasStrokes(b.dataset.char)) openStrokes(b.dataset.char, b.dataset.label, b.dataset.sayt); else speak(b.dataset.sayt); });
   document.getElementById('back').onclick = () => go({ screen: 'path' });
-  document.getElementById('practice').onclick = () => startSession('practice', { le });
+  const prb = document.getElementById('practice'); if (prb) prb.onclick = () => startSession('practice', { le, part: 'all' });
+  $app.querySelectorAll('[data-part]').forEach(b => b.onclick = () => startSession('practice', { le, part: b.dataset.part }));
+  $app.querySelectorAll('[data-dlg]').forEach(b => b.onclick = () => { audioCtx(); playDialog(le.listening[+b.dataset.dlg].lines); });
   document.getElementById('verify').onclick = () => { if (pr || pd) startSession('verify', { le }); };
   document.getElementById('speakbtn').onclick = () => startSpeak(le);
   $app.querySelectorAll('[data-roma]').forEach(b => b.onclick = () => { const box = b.closest('.box'); box.classList.toggle('hide-ro'); b.textContent = box.classList.contains('hide-ro') ? 'Mostra romaji' : 'Nascondi romaji'; });
 }
 
 /* ============================== sessione ============================== */
+function renderJLPTIntro() {
+  const s = SES; const sec = s.sections[s.sec]; stopTimer();
+  const noAudio = sec.key === 'C' && !canListen();
+  $app.innerHTML = `<div class="page session"><main class="wrap"><section class="result">
+    <span class="eyebrow">${esc(s.title)} · sezione ${s.sec + 1} di ${s.sections.length}</span>
+    <div class="np-g jlpt-jp">${esc(sec.jp)}</div><h1>${esc(sec.name)}</h1>
+    <p class="lead center">${sec.qs.length} domande · ${sec.minutes} minuti. Come nell'esame vero, le risposte non vengono corrette durante la prova: il risultato arriva alla fine.${sec.key === 'C' ? ' Ogni dialogo si può ascoltare al massimo due volte.' : ''}${noAudio ? ' Su questo dispositivo non c\'è una voce giapponese: i dialoghi saranno mostrati come testo.' : ''}</p>
+    <div class="cta-row center"><button class="btn" id="gosec">Inizia la sezione</button><button class="btn ghost" id="quitx">Abbandona la simulazione</button></div></section></main></div>`;
+  document.getElementById('gosec').onclick = () => { audioCtx(); s.pause = false; s.deadline = now() + sec.minutes * 60000; renderSession(); };
+  document.getElementById('quitx').onclick = () => { stopTimer(); SES = null; go({ screen: 'path' }); };
+}
 function renderSession() {
-  const s = SES; if (!s) return go({ screen: 'today' });
+  const s = SES; if (!s) { stopTimer(); return go({ screen: 'today' }); }
+  if (s.kind === 'jlpt') {
+    if (s.pause) return renderJLPTIntro();
+    if (!JT) JT = setInterval(() => { if (!SES || SES.kind !== 'jlpt' || SES.pause) return stopTimer(); const left = SES.deadline - now(); const el = document.getElementById('timer'); if (el) { el.textContent = fmtClock(left); el.classList.toggle('low', left < 120000); } if (left <= 0) jlptTimeUp(); }, 500);
+  }
   const q = s.qs[s.i]; if (!q) return s.kind === 'placement' ? finishPlacement(s.lessons.length) : finishSession();
   q._st = q._st || { sel: null, built: [], typed: '', checked: false, right: false, showR: false };
   if (!q._shown) q._shown = now();
   const st = q._st;
   let pct, count = '';
   if (s.kind === 'placement') { pct = Math.round(s.g / s.lessons.length * 100); count = 'lezione ' + (s.g + 1) + '/' + s.lessons.length; }
+  else if (s.kind === 'jlpt') { const sec = s.sections[s.sec]; pct = Math.round((s.i - sec.start) / sec.qs.length * 100); count = fmtClock(s.deadline - now()); }
   else if (s.kind === 'practice' || s.kind === 'review') { const done = s.results.filter(r => r.ok).length; const tot = s.total; pct = Math.round(Math.min(done, tot) / tot * 100); count = Math.min(done, tot) + '/' + tot; }
   else { pct = Math.round(s.i / s.qs.length * 100); count = (s.i + 1) + '/' + s.qs.length; }
   const ro = showRomaji(q.level);
   let stage = '';
-  if (q.audioOnly) stage = `<div class="stage"><button class="say lg" data-say="${esc(q.audioOnly)}" aria-label="Riascolta">${ICON_SAY}</button></div>`;
+  const SPEAKER = { F: 'Donna', M: 'Uomo', N: 'Voce' };
+  if (q.passage) stage = `<div class="passage"><span class="eyebrow">${esc(q.passageTitle || 'Leggi il testo')}</span><div class="ptext jp">${esc(q.passage).replace(/\n/g, '<br>')}</div>${st.checked && q.translation ? `<details class="howto"><summary>Traduzione</summary><p>${esc(q.translation)}</p></details>` : ''}</div>`;
+  else if (q.dialog) stage = q.noAudio
+    ? `<div class="passage"><span class="eyebrow">Dialogo (senza audio su questo dispositivo)</span><div class="dlg jp">${q.dialog.map(([sp, t]) => `<p><b>${SPEAKER[sp] || sp}</b> ${esc(t)}</p>`).join('')}</div></div>`
+    : `<div class="stage"><button class="say lg" id="dlgplay" aria-label="Ascolta il dialogo">${ICON_SAY}</button><span class="stage-ro" id="dlgst">${s.kind === 'jlpt' ? 'Puoi ascoltarlo al massimo due volte' : 'Tocca per ascoltare il dialogo'}</span></div>${st.checked ? `<div class="passage"><span class="eyebrow">Trascrizione</span><div class="dlg jp">${q.dialog.map(([sp, t]) => `<p><b>${SPEAKER[sp] || sp}</b> ${esc(t)}</p>`).join('')}</div>${q.translation ? `<details class="howto"><summary>Traduzione</summary><p>${esc(q.translation)}</p></details>` : ''}</div>` : ''}`;
+  else if (q.audioOnly) stage = `<div class="stage"><button class="say lg" data-say="${esc(q.audioOnly)}" aria-label="Riascolta">${ICON_SAY}</button></div>`;
   else if (q.big) {
     const body = q.bigKind === 'sent' ? `<span class="sent">${esc(q.big).replace('＿', '<span class="blank"></span>')}</span>` : q.bigKind === 'word' ? `<span class="word">${esc(q.big)}</span>` : `<span class="glyph">${esc(q.big)}</span>`;
     const rr = q.romaji ? (ro || st.showR ? `<span class="stage-ro">${esc(q.romaji)}</span>` : `<button class="linkish small" id="showr">Mostra lettura</button>`) : '';
@@ -932,12 +1139,13 @@ function renderSession() {
       <button class="btn wide ${st.right ? 'ok' : 'bad'}" id="next">Continua</button>`;
   } else {
     foot = auto ? `<p class="hint">${q.type === 'trace' ? (q.guided ? 'Scrivi col dito sopra il carattere grigio, un tratto alla volta.' : 'Scrivi il carattere col dito, un tratto alla volta, nell\'ordine giusto.') : 'Quando hai abbinato tutto, si passa avanti.'}</p><button class="btn wide" id="check" hidden>Verifica</button>`
+      : s.kind === 'jlpt' ? `<div class="cta-row"><button class="btn wide" id="check" ${can ? '' : 'disabled'}>Conferma</button></div><button class="linkish small" id="skipq">Salta questa domanda</button>`
       : `<button class="btn wide" id="check" ${can ? '' : 'disabled'}>Verifica</button><p class="hint keys">Invio per confermare${q.type === 'mcq' ? ' · tasti 1–4 per scegliere' : ''}</p>`;
   }
   const quitLabel = s.kind === 'placement' ? 'Termina il test qui' : 'Esci';
   $app.innerHTML = `<div class="page session"><main class="wrap">
-    <div class="q-top"><button class="x" id="quit" aria-label="${quitLabel}">×</button><div class="bar"><i style="width:${pct}%"></i></div><span class="q-count num">${count}</span></div>
-    <span class="q-mode">${esc(s.title)}${s.kind === 'placement' ? ' · ' + esc(s.lessons[s.g].title) : ''}${q.retry ? ' · di nuovo' : ''}</span>
+    <div class="q-top"><button class="x" id="quit" aria-label="${quitLabel}">×</button><div class="bar"><i style="width:${pct}%"></i></div><span class="q-count num" ${s.kind === 'jlpt' ? 'id="timer"' : ''}>${count}</span></div>
+    <span class="q-mode">${s.kind === 'jlpt' ? esc(s.sections[s.sec].jp + ' · ' + (q.mondai || '') + ' · ' + (s.i - s.sections[s.sec].start + 1) + '/' + s.sections[s.sec].qs.length) : esc(s.title)}${s.kind === 'placement' ? ' · ' + esc(s.lessons[s.g].title) : ''}${q.retry ? ' · di nuovo' : ''}</span>
     <h2 class="q-prompt">${esc(q.prompt)}</h2>${q.sub ? `<p class="q-sub">${esc(q.sub)}</p>` : ''}
     ${stage}${body}
     <div class="q-foot">${foot}</div>
@@ -946,7 +1154,7 @@ function renderSession() {
   bindSay();
   document.getElementById('quit').onclick = () => { document.getElementById('qc').hidden = false; };
   document.getElementById('qno').onclick = () => { document.getElementById('qc').hidden = true; };
-  document.getElementById('qyes').onclick = () => { if (s.kind === 'placement') finishPlacement(s.g); else { SES = null; go({ screen: s.ctx && s.ctx.le ? 'lesson' : 'today', id: s.ctx && s.ctx.le && s.ctx.le.id }); } };
+  document.getElementById('qyes').onclick = () => { stopTimer(); stopDialog(); if (s.kind === 'placement') finishPlacement(s.g); else { SES = null; go({ screen: s.ctx && s.ctx.le ? 'lesson' : 'today', id: s.ctx && s.ctx.le && s.ctx.le.id }); } };
   const sr = document.getElementById('showr'); if (sr) sr.onclick = () => { st.showR = true; renderSession(); };
   if (!st.checked) {
     $app.querySelectorAll('[data-opt]').forEach(b => b.onclick = () => { st.sel = q.options[+b.dataset.opt]; renderSession(); });
@@ -962,12 +1170,21 @@ function renderSession() {
       };
     }
     document.getElementById('check').onclick = check;
+    const skq = document.getElementById('skipq'); if (skq) skq.onclick = () => { st.sel = '__skip__'; check(); };
     if (q.type === 'trace') bindTrace(q, st);
     if (q.type === 'match') bindMatch(q, st);
   } else {
     const nx = document.getElementById('next'); nx.onclick = advance; nx.focus();
   }
   if (q.audioOnly && !st.played) { st.played = true; setTimeout(() => speak(q.audioOnly), 250); }
+  const dp = document.getElementById('dlgplay');
+  if (dp) {
+    const maxPlays = s.kind === 'jlpt' ? 2 : 99;
+    const run = () => { if ((st.plays || 0) >= maxPlays) return; st.plays = (st.plays || 0) + 1; dp.disabled = true; const lab = document.getElementById('dlgst'); if (lab) lab.textContent = 'In ascolto…';
+      playDialog(q.dialog).then(() => { const b = document.getElementById('dlgplay'), l = document.getElementById('dlgst'); if (b) b.disabled = (st.plays || 0) >= maxPlays; if (l) l.textContent = (st.plays || 0) >= maxPlays ? 'Ascolti esauriti' : 'Tocca per riascoltare'; }); };
+    dp.onclick = run;
+    if (!st.checked && !st.autoPlayed) { st.autoPlayed = true; setTimeout(run, 400); }
+  }
   document.onkeydown = e => {
     if (!document.getElementById('qc').hidden) return;
     if (e.key === 'Enter') { e.preventDefault(); if (st.checked) advance(); else { const c = document.getElementById('check'); if (c && !c.disabled) check(); } }
@@ -1026,7 +1243,7 @@ function bindMatch(q, st) {
 function isRight(q, st) {
   if (q.type === 'mcq') return st.sel === q.answer;
   if (q.type === 'roma') return q.answers.map(normRoma).includes(normRoma(st.typed));
-  if (q.type === 'kana') { const got = normKana(inputToKana(st.typed.trim(), true)); return q.answers.some(a => normKana(a) === got); }
+  if (q.type === 'kana') { const got = normKana(inputToKana(st.typed.trim(), true)); return q.answers.some(a => kanaEq(a, got)); }
   if (q.type === 'build') { const got = st.built.map(i => q.bank[i]).join('|'); return q.orders.some(o => o.join('|') === got); }
   if (q.type === 'trace') return !!st.traceOk;
   if (q.type === 'match') return !!st.matchOk;
@@ -1036,12 +1253,19 @@ function check() {
   const q = SES.qs[SES.i], st = q._st;
   st.right = isRight(q, st); st.checked = true;
   grade(q, st.right);
+  if (SES.kind === 'jlpt') {
+    stopDialog(); SES.i++;
+    const sec = SES.sections[SES.sec];
+    if (SES.i >= sec.end) { SES.sec++; SES.pause = true; stopTimer(); if (SES.sec >= SES.sections.length) return finishSession(); }
+    renderSession(); window.scrollTo(0, 0); return;
+  }
   sfx(st.right ? 'ok' : 'bad');
   if (st.right && q.sayAfter) setTimeout(() => speak(q.sayAfter), 280);
   if (q.type === 'trace' && st.right && q.say) setTimeout(() => speak(q.say), 280);
   renderSession();
 }
 function advance() {
+  stopDialog();
   const s = SES;
   if (s.kind === 'placement') {
     s.i++;
@@ -1063,7 +1287,7 @@ function speakItems(le) {
   if (!le) return [{ jp: 'こんにちは', kana: 'こんにちは', r: 'konnichiwa', it: 'buongiorno' }, { jp: 'ありがとう', kana: 'ありがとう', r: 'arigatō', it: 'grazie' }];
   const ws = (le.words || []).map(w => ({ jp: w.jp, kana: w.kana, r: w.r, it: w.it, acc: w.acc }));
   const ss = (le.sentences || []).filter(x => !x.build).map(x => ({ jp: x.jp, kana: x.jp, r: x.r, it: x.it }));
-  if (le.kanji) return le.kanji.map(k => ({ jp: readingForms(k.kun[0])[1], kana: readingForms(k.kun[0])[1], r: '', it: k.k + ' · ' + k.it }));
+  if (le.kanji && !le.words) return le.kanji.map(k => ({ jp: readingForms(k.kun[0] || k.on[0])[1], kana: readingForms(k.kun[0] || k.on[0])[1], r: '', it: k.k + ' · ' + k.it }));
   return shuffle(ws).slice(0, ss.length ? 5 : 7).concat(shuffle(ss).slice(0, 3));
 }
 // Registrazione: PCM grezzo dal microfono, poi WAV mono 16 kHz (il formato richiesto da Azure)
@@ -1179,11 +1403,33 @@ function renderResult() {
     const g = document.getElementById('goT'); if (g) g.onclick = () => go({ screen: 'lesson', id: t.id });
     return;
   }
+  if (r.kind === 'jlpt') {
+    const miss = r.results.filter(x => !x.ok).map(x => x.q).slice(0, 40); const c = r.cfg;
+    const sec = (name, jp, sc, max, min, d) => `<div class="kpi jl"><span class="jp">${jp}</span><b class="num">${sc}<small>/${max}</small></b><span>${name}${min ? ' · minimo ' + min : ''}</span><span class="num">${d}</span></div>`;
+    $app.innerHTML = `<div class="page"><main class="wrap"><section class="result">
+      <span class="eyebrow">${esc(r.title)}</span><div class="score num">${r.total}<small>/180</small></div>
+      <h1>${r.passed ? 'Simulazione superata' : 'Simulazione non superata'}</h1><span class="stamp ${r.passed ? 'ok' : 'no'}">${r.passed ? '合格' : '不合格'}</span>
+      <p class="lead center">${r.passed ? 'Hai raggiunto le soglie dell\'esame: almeno ' + c.pass + ' punti in totale e il minimo in ogni sezione.' : 'Motivo: ' + esc(r.reasons.join('; ')) + '.'} Il punteggio è una stima proporzionale: il JLPT vero usa punteggi scalati, ma le soglie sono le stesse.</p>
+      <div class="kpis full">${sec('Lingua e lettura', '文字・語彙・文法・読解', r.lang, 120, c.minLang, `vocabolario ${r.secs.A.ok}/${r.secs.A.tot} · grammatica e lettura ${r.secs.B.ok}/${r.secs.B.tot}`)}${sec('Ascolto', '聴解', r.listen, 60, c.minListen, `${r.secs.C.ok}/${r.secs.C.tot} giuste`)}</div>
+      <div class="cta-row center"><button class="btn" id="again">Rifai la simulazione</button><button class="btn ghost" id="home">Vai a Oggi</button></div>
+      ${miss.length ? `<div class="mist"><span class="eyebrow">Risposte da rivedere</span><ul>${miss.map(q => `<li><span class="q">${esc(q.mondai || '')} · ${esc(q.prompt)}${q.big ? ' · ' + esc(q.big) : ''}</span><span class="a jp">${esc(q.answer)}${q.explain ? ' · ' + esc(q.explain) : ''}</span></li>`).join('')}</ul></div>` : ''}
+    </section></main></div>`;
+    document.getElementById('home').onclick = () => go({ screen: 'today' });
+    document.getElementById('again').onclick = () => startSession('jlpt', r.ctx);
+    if (r.passed && !r._played) { r._played = true; setTimeout(() => sfx('done'), 150); }
+    return;
+  }
   const first = r.results.filter(x => x.first); const ok = first.filter(x => x.ok).length;
   const miss = uniq(first.filter(x => !x.ok).map(x => x.q)).slice(0, 30);
   const le = r.ctx && r.ctx.le;
   let heading, note = '', actions = '';
-  if (r.kind === 'practice') { heading = 'Esercizi completati'; note = `Al primo tentativo: ${ok} giuste su ${first.length}. Ora puoi fare la verifica della lezione.`; actions = '<button class="btn" id="toVerify">Vai alla verifica</button><button class="btn ghost" id="toLesson">Torna alla lezione</button>'; }
+  if (r.kind === 'practice') {
+    const nextPart = lessonParts(le).find(p => !partDone(le, p));
+    heading = r.ctx.part && r.ctx.part !== 'all' ? PART_NAMES[r.ctx.part] + ': fatto' : 'Esercizi completati';
+    note = `Al primo tentativo: ${ok} giuste su ${first.length}. ` + (nextPart ? 'Prossima parte: ' + PART_NAMES[nextPart] + '.' : 'Ora puoi fare la verifica della lezione.');
+    actions = nextPart ? `<button class="btn" id="toPart">${PART_NAMES[nextPart]}</button><button class="btn ghost" id="toLesson">Torna alla lezione</button>` : '<button class="btn" id="toVerify">Vai alla verifica</button><button class="btn ghost" id="toLesson">Torna alla lezione</button>';
+    r._nextPart = nextPart;
+  }
   else if (r.kind === 'verify') {
     heading = r.passed ? 'Lezione superata' : 'Verifica non superata';
     note = r.passed ? `${r.introduced ? r.introduced + ' elementi entrano nei ripassi.' : ''} ${miss.length ? 'Quelli sbagliati te li ripropongo già oggi.' : ''}` : 'Serve almeno l\'80%. Rileggi la spiegazione e rifai gli esercizi guidati: le domande cambiano ogni volta.';
@@ -1208,6 +1454,7 @@ function renderResult() {
   on('home', () => go({ screen: 'today' }));
   on('toLesson', () => go({ screen: 'lesson', id: le.id }));
   on('toVerify', () => startSession('verify', { le }));
+  on('toPart', () => startSession('practice', { le, part: r._nextPart }));
   on('more', () => startSession('review'));
   on('again', () => startSession(r.kind, r.ctx));
   on('goNext', () => { const i = stepInfo(nextStep()); i && i.go(); });
@@ -1293,7 +1540,7 @@ function renderSettings() {
   document.getElementById('backup').onclick = openBackup;
   const dla = document.getElementById('dlaudio'); if (dla) dla.onclick = async () => {
     const m = document.getElementById('dlmsg'); dla.disabled = true;
-    const texts = IDX.lessons.flatMap(le => [...(le.kana || []).map(k => k.k), ...(le.words || []).map(w => w.jp), ...(le.sentences || []).filter(x => !x.build).map(x => x.jp), ...(le.kanji || []).map(k => readingForms(k.kun[0])[1])]);
+    const texts = IDX.lessons.flatMap(le => [...(le.kana || []).map(k => k.k), ...(le.words || []).map(w => w.jp), ...(le.sentences || []).filter(x => !x.build).map(x => x.jp), ...(le.kanji || []).map(k => readingForms(k.kun[0] || k.on[0])[1])]);
     const r = await Neural.prefetch(texts, (d, t) => { m.className = 'msg'; m.textContent = 'Scaricamento: ' + d + ' di ' + t + '…'; });
     m.className = r.fail ? 'msg no' : 'msg ok'; m.textContent = r.fail ? 'Scaricati ' + (r.total - r.fail) + ' audio su ' + r.total + '. Riprova più tardi per i mancanti.' : 'Fatto: ' + r.total + ' audio disponibili anche senza connessione.'; dla.disabled = false;
   };
@@ -1394,6 +1641,6 @@ window.__sill = {
     check(); return true;
   },
   next() { advance(); },
-  go(s) { go({ screen: s }); },
+  go(s) { go(typeof s === 'string' ? { screen: s } : s); },
   api: { toWav16k, pitchPattern, morae, speakItems, Neural, mergeState, Sync, judgeStroke, samplePath, matchQ, traceQ, makeQ, buildPractice, buildVerify, buildChapter, buildExam, buildReview, placementGroup, lessonItems, grammarTemplates, isRight, inputToKana }
 };

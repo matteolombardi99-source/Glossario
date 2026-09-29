@@ -395,6 +395,26 @@ h1{font-size:28px}
 .sw small{font-size:11px;font-weight:700}
 .sw.ok{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)} .sw.mid{border-color:var(--kihada);color:var(--kihada);background:var(--kihada-soft)} .sw.no{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
 .sw .jp{color:var(--ink)}
+
+/* letture, dialoghi, parti, esame */
+.passage{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin:10px 0 16px;display:grid;gap:8px}
+.ptext{font-size:18px;line-height:1.9;white-space:normal;max-height:46vh;overflow:auto}
+.dlg p{margin:4px 0;font-size:17px;line-height:1.7}
+.dlg b{font-family:var(--f-ui);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.reading{display:grid;gap:6px;padding:10px 0}
+.reading + .reading{border-top:1px solid var(--line)}
+.lrow{display:flex;align-items:center;gap:12px}
+.parts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.parts .btn{padding:9px 14px;font-size:14px}
+.pitch.small{margin-top:2px}
+.pitch.small text{font-size:15px}
+.kn{display:block;font-size:15px;color:var(--muted)}
+.jlpt-jp{font-size:34px}
+#timer.low{color:var(--bad)}
+.kpis.full{grid-template-columns:1fr;width:100%}
+.kpi.jl{display:grid;gap:2px;text-align:left}
+.kpi.jl .jp{font-size:13px;color:var(--muted)}
+.kpi.jl b small{font-size:15px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (prefers-reduced-motion:reduce){.trace path.anim{stroke-dashoffset:0}}
 </style>
